@@ -1,0 +1,39 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.Python
+build/
+dist/
+
+# Virtualenvs
+.venv/
+venv/
+env/
+
+# --- Environment / secrets ---
+.env
+.env.local
+.env.*.local
+
+# --- Database ---
+*.db
+*.sqlite
+*.sqlite3
+
+# --- Node / client ---
+node_modules/
+client/dist/
+client/build/
+*.log
+npm-debug.log*
+
+# --- Editors / OS ---
+.vscode/
+.idea/
+.DS_Store
+
+# --- Tooling ---
+.pytest_cache/
+.coverage
+htmlcov/
