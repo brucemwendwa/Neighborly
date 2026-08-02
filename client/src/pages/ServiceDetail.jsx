@@ -153,7 +153,7 @@ export default function ServiceDetail() {
                 label="Agreed price (KES)"
                 type="number"
                 min="0"
-                step="50"
+                step="any"
                 name="total_amount"
                 placeholder={String(service.base_price)}
                 hint={`Leave blank to use the ${money(service.base_price)} starting price.`}
