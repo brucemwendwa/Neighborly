@@ -235,7 +235,7 @@ function MoveForm({ onClose, onSaved }) {
             label="Budget (KES)"
             type="number"
             min="0"
-            step="500"
+            step="any"
             name="total_amount"
             hint="Optional — the crew confirms the final figure."
             value={form.total_amount}
