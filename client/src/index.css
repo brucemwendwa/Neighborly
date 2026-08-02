@@ -1,16 +1,39 @@
-/* Design tokens. Change these, not the rules below. */
+/* ==========================================================================
+   Jirani Hub — design system
+   --------------------------------------------------------------------------
+   One stylesheet, three layers:
+
+     1. Tokens      colours, radius, spacing. Change these, not the rules.
+     2. Primitives  .btn .card .badge .field — the pieces pages are built from
+     3. Layouts     the shell, grids and page-specific arrangements
+
+   Components use these class names rather than inline styles, so the whole
+   product can be re-skinned by editing the tokens block below.
+   ========================================================================== */
+
+/* --- 1. Tokens ------------------------------------------------------------ */
 :root {
   --bg: #ffffff;
   --surface: #f7f8fa;
+  --surface-2: #eef1f4;
   --text: #4a5260;
   --text-strong: #0d1117;
+  --text-mute: #79808d;
   --border: #e3e6ea;
   --accent: #1f8a5f;
   --accent-hover: #17694a;
   --accent-soft: rgba(31, 138, 95, 0.1);
   --danger: #c0392b;
+  --danger-soft: rgba(192, 57, 43, 0.1);
+  --warn: #b7791f;
+  --warn-soft: rgba(183, 121, 31, 0.12);
+  --info: #2b6cb0;
+  --info-soft: rgba(43, 108, 176, 0.12);
+  --shadow: 0 1px 2px rgba(13, 17, 23, 0.04), 0 8px 24px rgba(13, 17, 23, 0.06);
   --radius: 10px;
+  --radius-lg: 16px;
   --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --mono: ui-monospace, 'SF Mono', Consolas, monospace;
 
   font: 16px/1.5 var(--sans);
   color-scheme: light dark;
@@ -23,13 +46,21 @@
   :root {
     --bg: #12151a;
     --surface: #1a1f26;
+    --surface-2: #232932;
     --text: #9aa4b2;
     --text-strong: #f0f3f6;
+    --text-mute: #78828f;
     --border: #2a3038;
     --accent: #3fbf87;
     --accent-hover: #52d199;
     --accent-soft: rgba(63, 191, 135, 0.14);
     --danger: #ef6b5e;
+    --danger-soft: rgba(239, 107, 94, 0.14);
+    --warn: #e0b357;
+    --warn-soft: rgba(224, 179, 87, 0.14);
+    --info: #6aa9e9;
+    --info-soft: rgba(106, 169, 233, 0.14);
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.3);
   }
 }
 
@@ -43,15 +74,23 @@ body {
 
 h1,
 h2,
-h3 {
+h3,
+h4 {
   color: var(--text-strong);
   line-height: 1.2;
   margin: 0 0 0.5rem;
 }
 
 h1 {
-  font-size: clamp(1.9rem, 4vw, 2.75rem);
+  font-size: clamp(1.7rem, 3.5vw, 2.4rem);
   letter-spacing: -0.02em;
+}
+h2 {
+  font-size: 1.3rem;
+  letter-spacing: -0.01em;
+}
+h3 {
+  font-size: 1.05rem;
 }
 
 p {
@@ -63,7 +102,51 @@ a {
   text-decoration: none;
 }
 
-/* --- Shell ---------------------------------------------------------------- */
+small,
+.small {
+  font-size: 0.84rem;
+}
+
+.muted {
+  color: var(--text-mute);
+}
+
+.mono {
+  font-family: var(--mono);
+}
+
+.center {
+  text-align: center;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.row-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.stack-sm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.push-right {
+  margin-left: auto;
+}
+
+/* --- 2. Shell ------------------------------------------------------------- */
 .app {
   min-height: 100svh;
   display: flex;
@@ -71,18 +154,23 @@ a {
 }
 
 .app-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
   display: flex;
   align-items: center;
-  gap: 1.5rem;
-  flex-wrap: wrap;
-  padding: 1rem 1.5rem;
+  gap: 1.25rem;
+  padding: 0.85rem 1.5rem;
   border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(8px);
 }
 
 .brand {
   font-weight: 700;
   font-size: 1.15rem;
   color: var(--text-strong);
+  white-space: nowrap;
 }
 .brand span {
   color: var(--accent);
@@ -90,12 +178,19 @@ a {
 
 .app-nav {
   display: flex;
-  gap: 1.25rem;
+  gap: 0.35rem;
   margin-right: auto;
-  font-size: 0.94rem;
+  font-size: 0.92rem;
+  overflow-x: auto;
+}
+.app-nav a {
+  padding: 0.4rem 0.7rem;
+  border-radius: 999px;
+  white-space: nowrap;
 }
 .app-nav a.active {
   color: var(--accent);
+  background: var(--accent-soft);
   font-weight: 600;
 }
 .app-nav a:hover {
@@ -105,78 +200,58 @@ a {
 .app-actions {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-}
-
-.user-chip {
-  font-size: 0.88rem;
-  padding: 0.25rem 0.6rem;
-  border-radius: 999px;
-  background: var(--accent-soft);
-  color: var(--accent);
+  gap: 0.6rem;
 }
 
 .app-main {
   flex: 1;
-  width: min(1100px, 100%);
+  width: min(1140px, 100%);
   margin: 0 auto;
-  padding: 2.5rem 1.5rem;
+  padding: 2rem 1.5rem 3.5rem;
 }
 
 .app-footer {
   border-top: 1px solid var(--border);
   padding: 1.25rem 1.5rem;
   font-size: 0.85rem;
+  color: var(--text-mute);
 }
 
-/* --- Pieces --------------------------------------------------------------- */
-.hero {
-  max-width: 46rem;
-  margin-bottom: 2.5rem;
+@media (max-width: 720px) {
+  .app-header {
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+  .app-nav {
+    order: 3;
+    width: 100%;
+    margin-right: 0;
+  }
 }
 
-.health {
-  font-size: 0.85rem;
-  font-family: ui-monospace, Consolas, monospace;
-  color: var(--accent);
-}
-
-.pillars {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-  gap: 1rem;
-}
-
-.card {
-  padding: 1.25rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
-}
-.card h2 {
-  font-size: 1.05rem;
-}
-.card p {
-  font-size: 0.9rem;
-  margin: 0;
-}
-
+/* --- 3. Buttons ----------------------------------------------------------- */
 .btn {
-  display: inline-block;
-  padding: 0.55rem 1.1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1.05rem;
   border: 1px solid transparent;
   border-radius: var(--radius);
   background: var(--accent);
   color: #fff;
   font: inherit;
   font-size: 0.92rem;
+  font-weight: 500;
+  line-height: 1.3;
   cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
 .btn:hover:not(:disabled) {
   background: var(--accent-hover);
 }
 .btn:disabled {
-  opacity: 0.6;
+  opacity: 0.55;
   cursor: not-allowed;
 }
 
@@ -187,11 +262,289 @@ a {
 }
 .btn-ghost:hover:not(:disabled) {
   background: var(--surface);
+  color: var(--text-strong);
 }
 
-/* --- Forms ---------------------------------------------------------------- */
+.btn-danger {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--danger);
+}
+.btn-danger:hover:not(:disabled) {
+  background: var(--danger-soft);
+}
+
+.btn-sm {
+  padding: 0.35rem 0.7rem;
+  font-size: 0.84rem;
+}
+.btn-block {
+  width: 100%;
+}
+.btn-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--accent);
+  font: inherit;
+  font-size: 0.88rem;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* --- 4. Cards and surfaces ------------------------------------------------ */
+.card {
+  padding: 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.card h2,
+.card h3 {
+  font-size: 1.03rem;
+  margin-bottom: 0.35rem;
+}
+.card p {
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.card-link {
+  display: block;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+.card-link:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.panel {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg);
+  padding: 1.5rem;
+  box-shadow: var(--shadow);
+}
+
+.grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+}
+.grid-2 {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+.grid-wide {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+}
+
+.split {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  align-items: start;
+}
+@media (max-width: 860px) {
+  .split {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --- 5. Page furniture ---------------------------------------------------- */
+.page-header {
+  margin-bottom: 1.5rem;
+}
+.page-header p {
+  color: var(--text-mute);
+  max-width: 46rem;
+  margin: 0;
+}
+.page-header .row-between {
+  align-items: flex-start;
+}
+
+.hero {
+  max-width: 48rem;
+  margin-bottom: 2.5rem;
+}
+.hero p {
+  font-size: 1.05rem;
+}
+
+.hero-banner {
+  border-radius: var(--radius-lg);
+  padding: 3rem 2rem;
+  background: linear-gradient(140deg, var(--accent-soft), transparent 70%),
+    var(--surface);
+  border: 1px solid var(--border);
+  margin-bottom: 2rem;
+}
+
+.pillars {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 1rem;
+}
+
+.section {
+  margin-top: 2.5rem;
+}
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.9rem;
+}
+
+/* --- 6. Badges, chips, avatars ------------------------------------------- */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: var(--surface-2);
+  color: var(--text);
+  white-space: nowrap;
+}
+.badge-success {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.badge-warn {
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+.badge-danger {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+.badge-info {
+  background: var(--info-soft);
+  color: var(--info);
+}
+
+.user-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.86rem;
+  padding: 0.2rem 0.6rem 0.2rem 0.2rem;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-strong);
+  border: 1px solid var(--border);
+}
+
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 700;
+  flex: none;
+  overflow: hidden;
+}
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.avatar-lg {
+  width: 3.25rem;
+  height: 3.25rem;
+  font-size: 1.1rem;
+}
+
+.bell {
+  position: relative;
+  display: inline-flex;
+  padding: 0.4rem 0.55rem;
+  border-radius: var(--radius);
+}
+.bell:hover {
+  background: var(--surface);
+}
+.bell-count {
+  position: absolute;
+  top: -2px;
+  right: -4px;
+  min-width: 1.1rem;
+  height: 1.1rem;
+  padding: 0 0.25rem;
+  border-radius: 999px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+}
+
+.stars {
+  display: inline-flex;
+  gap: 0.1rem;
+  color: var(--warn);
+  font-size: 0.95rem;
+  letter-spacing: 0.05em;
+}
+.stars .off {
+  color: var(--border);
+}
+.star-button {
+  background: none;
+  border: none;
+  padding: 0 0.1rem;
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--border);
+}
+.star-button.on {
+  color: var(--warn);
+}
+
+/* --- 7. Stat tiles -------------------------------------------------------- */
+.stats {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
+}
+.stat {
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.stat-value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text-strong);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+.stat-label {
+  font-size: 0.82rem;
+  color: var(--text-mute);
+  margin-top: 0.15rem;
+}
+
+/* --- 8. Forms ------------------------------------------------------------- */
 .form-page {
-  max-width: 24rem;
+  max-width: 26rem;
+  margin: 0 auto;
 }
 
 .form {
@@ -200,30 +553,361 @@ a {
   gap: 1rem;
 }
 
+.form-row {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr 1fr;
+}
+@media (max-width: 560px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.88rem;
+  color: var(--text-strong);
+}
+.field > span {
+  font-weight: 500;
+}
+.field-hint {
+  font-size: 0.78rem;
+  color: var(--text-mute);
+  font-weight: 400;
+}
+
 .form label {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.3rem;
   font-size: 0.88rem;
   color: var(--text-strong);
 }
 
-.form input {
+input,
+select,
+textarea {
   padding: 0.6rem 0.75rem;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--bg);
   color: var(--text-strong);
   font: inherit;
+  font-size: 0.94rem;
+  width: 100%;
 }
-.form input:focus {
+textarea {
+  min-height: 6rem;
+  resize: vertical;
+}
+input:focus,
+select:focus,
+textarea:focus {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
   border-color: transparent;
+}
+input[type='checkbox'] {
+  width: auto;
+}
+
+.checkbox {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-end;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  margin-bottom: 1.25rem;
+}
+.filters .field {
+  flex: 1 1 150px;
+  min-width: 0;
 }
 
 .error {
   color: var(--danger);
   font-size: 0.88rem;
   margin: 0;
+}
+.notice {
+  padding: 0.7rem 0.9rem;
+  border-radius: var(--radius);
+  font-size: 0.88rem;
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+.notice-info {
+  background: var(--info-soft);
+  color: var(--info);
+}
+.notice-success {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* --- 9. Tabs, lists, tables ---------------------------------------------- */
+.tabs {
+  display: flex;
+  gap: 0.25rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 1.25rem;
+  overflow-x: auto;
+}
+.tab {
+  padding: 0.6rem 0.9rem;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 0.92rem;
+  color: var(--text-mute);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+}
+.tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+  font-weight: 600;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.list-item {
+  display: flex;
+  gap: 0.9rem;
+  align-items: flex-start;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.list-item.unread {
+  border-left: 3px solid var(--accent);
+}
+
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+th,
+td {
+  padding: 0.65rem 0.9rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+th {
+  background: var(--surface);
+  color: var(--text-strong);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.thumb {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  display: block;
+}
+.thumb-row {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+}
+
+/* --- 10. States ----------------------------------------------------------- */
+.empty {
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  color: var(--text-mute);
+}
+.empty h3 {
+  color: var(--text);
+}
+
+.skeleton {
+  border-radius: var(--radius);
+  background: linear-gradient(
+    90deg,
+    var(--surface) 25%,
+    var(--surface-2) 37%,
+    var(--surface) 63%
+  );
+  background-size: 400% 100%;
+  animation: shimmer 1.3s ease infinite;
+  height: 5.5rem;
+}
+@keyframes shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: 0 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+}
+
+.spinner {
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* --- 11. Modal and toasts ------------------------------------------------- */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(13, 17, 23, 0.55);
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+}
+.modal {
+  width: min(30rem, 100%);
+  max-height: 88vh;
+  overflow-y: auto;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  box-shadow: var(--shadow);
+}
+.modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  line-height: 1;
+  color: var(--text-mute);
+  cursor: pointer;
+}
+
+.toasts {
+  position: fixed;
+  bottom: 1.25rem;
+  right: 1.25rem;
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: min(22rem, calc(100vw - 2.5rem));
+}
+.toast {
+  padding: 0.7rem 0.95rem;
+  border-radius: var(--radius);
+  background: var(--text-strong);
+  color: var(--bg);
+  font-size: 0.88rem;
+  box-shadow: var(--shadow);
+}
+.toast-error {
+  background: var(--danger);
+  color: #fff;
+}
+.toast-success {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* --- 12. Pagination and misc --------------------------------------------- */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  font-size: 0.88rem;
+  color: var(--text-mute);
+}
+
+.qr {
+  display: grid;
+  place-items: center;
+  gap: 0.5rem;
+  padding: 1.1rem;
+  border-radius: var(--radius);
+  background: var(--bg);
+  border: 1px dashed var(--border);
+}
+.qr-code {
+  font-family: var(--mono);
+  font-size: 1.05rem;
+  letter-spacing: 0.08em;
+  color: var(--text-strong);
+  font-weight: 700;
+}
+
+.health {
+  font-size: 0.85rem;
+  font-family: var(--mono);
+  color: var(--accent);
+}
+
+.timeline {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+  color: var(--text-mute);
+}
+.timeline-step {
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: var(--surface-2);
+}
+.timeline-step.done {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
 }
