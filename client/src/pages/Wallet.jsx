@@ -149,7 +149,7 @@ function TopUpModal({ onClose, onSaved }) {
           label="Amount (KES)"
           type="number"
           min="1"
-          step="100"
+          step="any"
           value={form.amount}
           onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}
           required
