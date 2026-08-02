@@ -72,12 +72,14 @@ def register_extensions(app):
 def register_blueprints(app):
     """Mount one blueprint per resource.
 
-    controllers/ is empty for now. As you build each feature, add it here:
-
-        from controllers.auth_controller import auth_bp
-        app.register_blueprint(auth_bp, url_prefix="/api/auth")
+    The list itself lives in controllers/__init__.py, so adding a feature
+    is a one-line change there rather than an edit to the app factory.
+    Importing it here (rather than at module scope) also registers the
+    JWT callbacks in controllers/utils.py at the right moment.
     """
-    pass
+    from controllers import register_blueprints as mount
+
+    mount(app)
 
 
 def register_error_handlers(app):
