@@ -334,7 +334,7 @@ function RideForm({ onClose, onSaved }) {
             label="Price per seat (KES)"
             type="number"
             min="0"
-            step="50"
+            step="any"
             name="price_per_seat"
             value={form.price_per_seat}
             onChange={change}
