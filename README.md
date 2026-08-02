@@ -203,7 +203,10 @@ cp .env.example .env
 # 3. Create the database (SQLite — no server needed)
 pipenv run flask --app main db upgrade
 
-# 4. Run
+# 4. Load demo data (optional, but every screen has something to show)
+pipenv run python seed.py
+
+# 5. Run
 pipenv run flask --app main run --debug
 ```
 
@@ -222,9 +225,23 @@ npm install
 npm run dev
 ```
 
-The client is on **http://localhost:5173**. Its home page displays the backend
-status — if it reads `API ok · DB connected`, the full chain (browser → Vite
-proxy → Flask → database) is working.
+The client is on **http://localhost:5173**, proxying `/api` to Flask on :5000.
+
+### Demo accounts
+
+`seed.py` creates two estates and eight people. Every account uses the password
+**`Password123`**, and the sign-in page has one-click buttons for the four roles:
+
+| Email | Role | What they show off |
+|---|---|---|
+| `amina@example.com` | resident | Bookings, a listing, a ride she drives, a wallet balance |
+| `caleb@example.com` | provider | Assigned jobs, the open job board, reviews received |
+| `esther@example.com` | provider | Sitting in the approval queue (verified, not approved) |
+| `gate@jiranihub.co.ke` | security | The gate desk: look a code up, admit a visitor |
+| `admin@jiranihub.co.ke` | admin | Approvals, listing verification, catalogue, people |
+
+Re-running `seed.py` wipes every table and rebuilds it, so it is also the reset
+button after a demo.
 
 ### Switching to PostgreSQL
 
