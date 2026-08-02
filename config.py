@@ -18,7 +18,11 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 class Config:
     """Settings shared by every environment."""
 
-    SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-change-me")
+    # The fallbacks are long enough (>= 32 bytes) to satisfy PyJWT's HMAC
+    # key-length check, so development runs without a warning on every
+    # token. They are still development-only — ProductionConfig refuses to
+    # start without real values.
+    SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-change-me-before-you-deploy-anything")
 
     # SQLite by default so the project runs with zero database setup.
     # Point DATABASE_URL at Postgres when you are ready:
@@ -29,7 +33,9 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # JWT
-    JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "jwt-dev-secret-change-me")
+    JWT_SECRET_KEY = os.getenv(
+        "JWT_SECRET_KEY", "jwt-dev-secret-change-me-before-you-deploy-anything"
+    )
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(
         hours=int(os.getenv("JWT_ACCESS_TOKEN_HOURS", "24"))
     )
