@@ -117,7 +117,7 @@ export default function Listings() {
             label="Max rent (KES)"
             type="number"
             min="0"
-            step="1000"
+            step="any"
             value={filters.max_price}
             onChange={(e) => setFilter('max_price', e.target.value)}
           />
@@ -260,7 +260,7 @@ function ListingForm({ listing, onClose, onSaved }) {
             label="Rent per month (KES)"
             type="number"
             min="0"
-            step="500"
+            step="any"
             name="rent_price"
             value={form.rent_price}
             onChange={change}
