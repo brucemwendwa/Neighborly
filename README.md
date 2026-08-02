@@ -21,7 +21,7 @@ verifiable and payable.
 5. [The data model](#5-the-data-model)
 6. [How the models are wired](#6-how-the-models-are-wired)
 7. [Architecture](#7-architecture)
-8. [Adding a feature, end to end](#8-adding-a-feature-end-to-end)
+8. [API reference](#8-api-reference)
 9. [Working with migrations](#9-working-with-migrations)
 10. [Conventions](#10-conventions)
 11. [Roadmap](#11-roadmap)
@@ -108,19 +108,49 @@ Neighborly/
 │
 ├── client/                  React + Vite front end
 │   ├── src/
-│   │   ├── api/client.js        Configured axios instance (auth + errors)
+│   │   ├── api/
+│   │   │   ├── client.js         Configured axios instance (auth + errors)
+│   │   │   └── index.js          Every endpoint, one function each
 │   │   ├── components/
-│   │   │   ├── Layout.jsx        App shell: header, nav, <Outlet/>, footer
-│   │   │   └── ProtectedRoute.jsx  Route guard by auth state and role
-│   │   ├── context/AuthContext.jsx  Signed-in user, login/register/logout
-│   │   ├── pages/                One file per screen
+│   │   │   ├── Layout.jsx        App shell: header, role-aware nav, bell
+│   │   │   ├── ProtectedRoute.jsx  Route guard by auth state and role
+│   │   │   ├── ui.jsx            Field, Modal, StatusBadge, Stars, Pagination…
+│   │   │   └── cards.jsx         BookingCard, ListingCard, RideCard, …
+│   │   ├── context/
+│   │   │   ├── AuthContext.jsx   Signed-in user, login/register/logout
+│   │   │   └── ToastContext.jsx  Corner confirmations
+│   │   ├── hooks/useApi.js       useApi (read) + useAction (write)
+│   │   ├── utils/format.js       money, dates, labels, initials
+│   │   ├── pages/                18 screens — one file each
 │   │   ├── App.jsx               Route table
 │   │   ├── main.jsx              React entry point
-│   │   └── index.css             Design tokens + shell styles
+│   │   └── index.css             Design system: tokens, primitives, layouts
 │   └── vite.config.js            Dev proxy: /api -> localhost:5000
 │
-├── controllers/             ⬜ EMPTY — route handlers (blueprints) go here
-├── schemas/                 ⬜ EMPTY — Marshmallow schemas go here
+├── controllers/             ✅ One blueprint per resource
+│   ├── __init__.py              Blueprint registry — the API's table of contents
+│   ├── utils.py                 JWT loaders, role guards, pagination, notify()
+│   ├── auth_controller.py       register, login, refresh, me, change-password
+│   ├── user_controller.py       admin directory + public profile cards
+│   ├── estate_controller.py     the communities
+│   ├── catalogue_controller.py  categories + services
+│   ├── provider_controller.py   professional profiles, verification queue
+│   ├── booking_controller.py    the hub: request, accept, progress, complete
+│   ├── payment_controller.py    payments ledger + wallet
+│   ├── listing_controller.py    housing
+│   ├── move_controller.py       house moves
+│   ├── ride_controller.py       carpooling + seat claims
+│   ├── gate_pass_controller.py  visitor codes + the gate scanner
+│   ├── review_controller.py     post-booking feedback
+│   ├── notification_controller.py
+│   └── dashboard_controller.py  one-call summary for the home screen
+│
+├── schemas/                 ✅ Marshmallow schemas for all 15 resources
+│   ├── __init__.py              Registry + naming conventions
+│   ├── base.py                  BaseSchema, BaseAutoSchema, money()
+│   ├── user.py     estate.py    catalogue.py   provider.py
+│   ├── booking.py  payment.py   listing.py     move.py
+│   └── ride.py     gate_pass.py review.py      notification.py
 │
 ├── models/                  ✅ 15 SQLAlchemy models from the ERD
 │   ├── __init__.py              Registry + the ERD map, in comments
@@ -136,6 +166,7 @@ Neighborly/
 │   └── versions/
 │       └── 30c1297b48a6_*.py    Initial schema, all 15 tables
 │
+├── seed.py                  Demo data: 2 estates, 8 users, a full catalogue
 ├── extensions.py            Extension instances (db, migrate, jwt, bcrypt, cors)
 ├── config.py                Config classes selected by FLASK_ENV
 ├── main.py                  Application factory + entry point
@@ -146,9 +177,9 @@ Neighborly/
 └── README.md
 ```
 
-**`controllers/` and `schemas/` are intentionally empty.** They are the two
-folders you fill as you build each feature. [Section 8](#8-adding-a-feature-end-to-end)
-walks through filling them.
+Every layer is now implemented: 15 models, 15 schema modules, 16 blueprints
+(**89 routes**) and 18 client screens wired to them. [Section 8](#8-api-reference)
+is the endpoint reference.
 
 ---
 
