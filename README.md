@@ -481,9 +481,9 @@ Vite dev proxy   /api/* -> localhost:5000
    ▼
 Flask
    │  1. CORS, JWT verification              extensions
-   │  2. controllers/  ⬜   blueprint routes, HTTP concerns
-   │  3. schemas/      ⬜   validate input, serialise output
-   │  4. models/       ✅   business data + relationships
+   │  2. controllers/      blueprint routes, permissions, business rules
+   │  3. schemas/          validate input, serialise output
+   │  4. models/           business data + relationships
    ▼
 Database (SQLite or PostgreSQL)
 ```
@@ -543,141 +543,143 @@ not each write their own error responses.
 
 ---
 
-## 8. Adding a feature, end to end
+## 8. API reference
 
-Four steps, the same every time. Here it is for gate passes.
+Every route is mounted in [`controllers/__init__.py`](controllers/__init__.py) —
+one line per resource, so that file is the authoritative list. All routes live
+under `/api`.
 
-### Step 1 — the schema (`schemas/gate_pass_schema.py`)
+**Conventions used throughout**
 
-```python
-from marshmallow import Schema, fields, validate
-from models import GATE_PASS_STATUSES
+- Auth is `Authorization: Bearer <access token>`.
+- List endpoints answer one envelope: `{items, page, per_page, total, pages}`,
+  and accept `?page=` and `?per_page=`.
+- Errors answer `{error, details?}` — `400` validation, `401` unauthenticated,
+  `403` not yours, `404` missing, `409` conflicts with a rule or a constraint.
+- Money crosses the wire as a **string** (`"1500.00"`); ids are UUID strings.
+- 🔓 public · 🔑 signed in · 👤 owner only · 🛡 admin · 🚧 security
 
+### Auth
 
-class GatePassCreateSchema(Schema):
-    """Validates the incoming request body."""
-    visitor_name  = fields.Str(required=True, validate=validate.Length(min=2, max=120))
-    visitor_phone = fields.Str(required=True, validate=validate.Length(min=10, max=20))
-    purpose       = fields.Str(load_default=None)
-    entry_date    = fields.DateTime(required=True)
-    booking_id    = fields.Str(load_default=None)
+| Method | Route | Access | Does |
+|---|---|---|---|
+| POST | `/auth/register` | 🔓 | Create an account (+ wallet, + provider profile if `role=provider`), returns tokens |
+| POST | `/auth/login` | 🔓 | Exchange email + password for an access and refresh token |
+| POST | `/auth/refresh` | 🔑 refresh | New access token without re-entering the password |
+| GET | `/auth/me` | 🔑 | The signed-in user, with estate, wallet and provider profile |
+| PATCH | `/auth/me` | 🔑 | Edit your own profile (never role, email or password) |
+| POST | `/auth/change-password` | 🔑 | Requires the current password |
+| POST | `/auth/logout` | 🔑 | Client drops the token; endpoint exists for a future denylist |
 
+### Estates, users and the catalogue
 
-class GatePassSchema(Schema):
-    """Shapes the outgoing response."""
-    gate_pass_id  = fields.Str(dump_only=True)
-    visitor_name  = fields.Str()
-    visitor_phone = fields.Str()
-    purpose       = fields.Str()
-    entry_date    = fields.DateTime()
-    exit_date     = fields.DateTime()
-    qr_code       = fields.Str()
-    status        = fields.Str(validate=validate.OneOf(GATE_PASS_STATUSES))
-    created_at    = fields.DateTime(dump_only=True)
+| Method | Route | Access | Does |
+|---|---|---|---|
+| GET | `/estates` · `/estates/<id>` | 🔓 | The signup dropdown needs this before anyone has a token |
+| POST/PATCH/DELETE | `/estates…` | 🛡 | Manage communities (delete refused while members remain) |
+| GET | `/users` | 🛡 | Directory, filterable by `q`, `role`, `estate_id` |
+| GET | `/users/<id>` | 🔑 | Public profile card (name, picture, role — no contact details) |
+| PATCH | `/users/<id>` | 🛡 | The only way a role changes |
+| DELETE | `/users/<id>` | 🛡 | Refused (409) while bookings or payments exist |
+| GET | `/categories` · `/services` | 🔓 | The shop window. `?q=`, `?category_id=`, `?max_price=` |
+| POST/PATCH/DELETE | `/categories…` `/services…` | 🛡 | The catalogue is shared across estates |
+
+### Providers
+
+| Method | Route | Access | Does |
+|---|---|---|---|
+| GET | `/providers` | 🔓 | Approved providers by default; `?approved=false` is the admin queue |
+| GET | `/providers/<id>` | 🔓 | Profile with computed rating, review count, jobs completed |
+| GET | `/providers/<id>/jobs` | 👤 | Their assigned work |
+| GET/POST/PATCH | `/providers/me` | 🔑 | Create or edit your own profile (a resident becomes a provider here) |
+| PATCH | `/providers/<id>/verification` | 🛡 | `is_verified` (documents checked) and `is_approved` (allowed to work) |
+
+### Bookings — the hub
+
+| Method | Route | Access | Does |
+|---|---|---|---|
+| GET | `/bookings` | 🔑 | Anything you are part of. `?as=customer\|provider`, `?status=` |
+| GET | `/bookings/available` | 🔑 provider | The open job board: unassigned, pending, your estate |
+| GET | `/bookings/<id>` | 👤 | Customer, assigned provider or admin only |
+| POST | `/bookings` | 🔑 | Customer and estate come from the token; price defaults to the service |
+| POST | `/bookings/<id>/accept` | 🔑 provider | Assign yourself *and* move to `accepted` in one request |
+| PATCH | `/bookings/<id>` | 👤 | Status transition or detail edit — both gates checked |
+| DELETE | `/bookings/<id>` | 👤 | Only while pending and unpaid; otherwise cancel |
+
+The status machine, enforced server-side:
+
+```
+pending ──▶ accepted ──▶ in_progress ──▶ completed
+   │           │              │
+   └───────────┴──────────────┴────────▶ cancelled
 ```
 
-### Step 2 — the controller (`controllers/gate_pass_controller.py`)
+The customer may only ever request `cancelled`; `accepted`, `in_progress` and
+`completed` belong to the provider. `completed` and `cancelled` are terminal.
 
-```python
-import uuid
+### Money
 
-from flask import Blueprint, jsonify, request
-from flask_jwt_extended import get_jwt_identity, jwt_required
+| Method | Route | Access | Does |
+|---|---|---|---|
+| GET | `/payments` · `/payments/<id>` | 🔑 | Your ledger. `?booking_id=`, `?status=` |
+| POST | `/payments` | 🔑 | Pay a booking. Omit `amount` to clear the balance; overpaying is rejected |
+| PATCH | `/payments/<id>` | 🛡 | Stand-in for a gateway webhook. A refund credits the wallet |
+| GET | `/wallet` | 🔑 | Balance plus the last ten payments |
+| POST | `/wallet/top-up` | 🔑 | Add funds |
 
-from extensions import db
-from models import GatePass
-from schemas.gate_pass_schema import GatePassCreateSchema, GatePassSchema
+Wallet payments settle immediately (the money is already on the platform), cash
+stays `pending` until confirmed, card and M-Pesa are marked successful for the
+demo — [`settle()`](controllers/payment_controller.py) is the one function a
+real integration would replace.
 
-gate_pass_bp = Blueprint("gate_passes", __name__)
+### Housing, moving, commuting
 
-create_schema = GatePassCreateSchema()
-one_schema    = GatePassSchema()
-many_schema   = GatePassSchema(many=True)
+| Method | Route | Access | Does |
+|---|---|---|---|
+| GET | `/listings` | 🔓 | `?estate_id=`, `?bedrooms=` (n or more), `?min_price=`, `?max_price=`, `?verified=`, `?q=` |
+| GET | `/listings/mine` | 🔑 | What you have advertised |
+| POST/PATCH/DELETE | `/listings…` | 👤 | Estate comes from your profile, not the body |
+| PATCH | `/listings/<id>/verification` | 🛡 | The badge a renter actually trusts |
+| GET/POST/PATCH/DELETE | `/moves…` | 👤 | `?open=true` is the provider's job list |
+| GET | `/rides` | 🔑 | Scoped to your estate. `?from=`, `?to=`, `?status=` |
+| GET | `/rides/mine` | 🔑 | `offered` (you drive) and `joined` (seats you claimed) |
+| POST/PATCH/DELETE | `/rides…` | 👤 driver | Seats cannot drop below what passengers hold |
+| POST | `/rides/<id>/bookings` | 🔑 | Claim seats — the amount is computed, never sent |
+| DELETE | `/rides/<id>/bookings/me` | 🔑 | Release your seat (marked cancelled, not deleted) |
 
+### Gate passes, reviews, notifications, dashboard
 
-@gate_pass_bp.post("/")
-@jwt_required()
-def create_gate_pass():
-    # Raises ValidationError -> the central handler turns it into a 400.
-    data = create_schema.load(request.get_json())
+| Method | Route | Access | Does |
+|---|---|---|---|
+| GET | `/gate-passes` | 🔑 | Yours; security and admins see the whole estate |
+| POST | `/gate-passes` | 🔑 | Server mints the code from `secrets.token_hex` |
+| GET | `/gate-passes/lookup/<code>` | 🚧 | The scanner. Answers `{gate_pass, admit}` and expires stale passes |
+| PATCH | `/gate-passes/<id>` | 🔑/🚧 | Only security may mark a pass `used`; the host may expire it |
+| GET | `/reviews` | 🔓 | `?reviewee_id=`, `?booking_id=`, `?reviewer_id=` |
+| GET | `/reviews/summary/<user_id>` | 🔓 | Average and star breakdown, aggregated in SQL |
+| POST | `/reviews` | 🔑 | Requires a **completed** booking you were part of, once per person |
+| PATCH/DELETE | `/reviews/<id>` | 👤 | Authors edit their own words |
+| GET | `/notifications` | 🔑 | `?is_read=`, `?type=` |
+| GET | `/notifications/unread-count` | 🔑 | Just the badge number — a COUNT behind a composite index |
+| POST | `/notifications/read-all` | 🔑 | One UPDATE statement, not a loop |
+| GET | `/dashboard` | 🔑 | Every tile on the home screen in one request |
+| GET | `/dashboard/admin` | 🛡 | Platform totals and queue sizes |
+| GET | `/health` | 🔓 | Flask is up and the database answers |
 
-    gate_pass = GatePass(
-        **data,
-        user_id=get_jwt_identity(),
-        qr_code=str(uuid.uuid4()),
-    )
-    db.session.add(gate_pass)
-    db.session.commit()
+### Adding a feature
 
-    return jsonify(one_schema.dump(gate_pass)), 201
+The same four steps every time:
 
-
-@gate_pass_bp.get("/mine")
-@jwt_required()
-def list_my_gate_passes():
-    passes = (
-        GatePass.query
-        .filter_by(user_id=get_jwt_identity())
-        .order_by(GatePass.entry_date.desc())
-        .all()
-    )
-    return jsonify(many_schema.dump(passes))
-```
-
-### Step 3 — register the blueprint (`main.py`)
-
-```python
-def register_blueprints(app):
-    from controllers.gate_pass_controller import gate_pass_bp
-    app.register_blueprint(gate_pass_bp, url_prefix="/api/gate-passes")
-```
-
-### Step 4 — the client page (`client/src/pages/GatePasses.jsx`)
-
-```jsx
-import { useEffect, useState } from 'react'
-import api from '../api/client'
-
-export default function GatePasses() {
-  const [passes, setPasses] = useState([])
-
-  useEffect(() => {
-    api.get('/gate-passes/mine').then(({ data }) => setPasses(data))
-  }, [])
-
-  return (
-    <section>
-      <h1>My gate passes</h1>
-      {passes.map((p) => (
-        <article key={p.gate_pass_id} className="card">
-          <h2>{p.visitor_name}</h2>
-          <p>{p.status}</p>
-        </article>
-      ))}
-    </section>
-  )
-}
-```
-
-Then add the route in [`client/src/App.jsx`](client/src/App.jsx):
-
-```jsx
-<Route path="gate-passes" element={
-  <ProtectedRoute><GatePasses /></ProtectedRoute>
-} />
-```
-
-### Suggested build order
-
-Build in dependency order, so each feature stands on something that already works:
-
-1. **Auth** — register, login, `@jwt_required()`. Everything else needs `get_jwt_identity()`.
-2. **Estates and users** — an admin creates estates; residents join one.
-3. **Service catalogue** — categories and services, seeded by an admin.
-4. **Bookings** — the core flow, and the largest single piece.
-5. **Payments** — attach to bookings once bookings work.
-6. Then the verticals in any order: **housing**, **moving**, **commute**,
-   **gate passes**, **reviews**, **notifications**.
+1. **Model** — `models/<noun>.py`, imported in `models/__init__.py`, then
+   `flask db migrate`.
+2. **Schema** — `schemas/<noun>.py`: a dump schema (what goes out) and an input
+   schema (what is accepted). Register it in `schemas/__init__.py`.
+3. **Controller** — `controllers/<noun>_controller.py`, using the helpers in
+   `controllers/utils.py` (`body`, `paginate`, `save`, `require_owner`,
+   `role_required`, `notify`). Add it to `BLUEPRINTS` in
+   `controllers/__init__.py`.
+4. **Client** — an entry in `client/src/api/index.js`, a page in
+   `client/src/pages/`, and a `<Route>` in `client/src/App.jsx`.
 
 ---
 
@@ -727,7 +729,7 @@ exists — that is exactly what migrations are for.
 | Model classes | singular PascalCase | `HouseListing` |
 | Model files | singular snake_case | `models/house_listing.py` |
 | Controllers | `<noun>_controller.py` | `controllers/booking_controller.py` |
-| Schemas | `<noun>_schema.py` | `schemas/booking_schema.py` |
+| Schemas | `<noun>.py` | `schemas/booking.py` |
 | API routes | plural nouns | `/api/gate-passes` |
 
 **API routes carry no verbs.** The HTTP method is the verb: `POST /api/bookings`,
@@ -741,9 +743,10 @@ invisible to migrations.
 tables it has seen. A model nobody imports gets no table — silently, with no
 error.
 
-**Never call `axios` directly in a component.** Import the configured instance
-from `api/client.js`, so the base URL, auth header and error handling stay in one
-place.
+**Never call `axios` directly in a component.** Call the functions in
+`api/index.js`, which use the configured instance from `api/client.js` — so the
+base URL, auth header and error handling stay in one place, and every endpoint
+the client uses is greppable from one file.
 
 **Route guards are UX, not security.** `ProtectedRoute` improves the experience;
 it protects nothing. Anyone can edit localStorage. The server must enforce every
@@ -753,16 +756,22 @@ rule independently with `@jwt_required()` and its own role checks.
 
 ## 11. Roadmap
 
-This repository is the scaffold. Still to build:
+Built:
 
-- [ ] Auth controller: register, login, refresh, `@role_required` decorator
-- [ ] Marshmallow schemas for all 15 resources
-- [ ] Controllers/blueprints for all 15 resources
-- [ ] Seed script: estates, service categories, demo users
-- [ ] File uploads for profile pictures and listing images
-- [ ] M-Pesa STK push for payments
-- [ ] QR generation and a scanner view for security
-- [ ] Real-time notifications (WebSockets or polling)
+- [x] Auth: register, login, refresh, `role_required`, JWT user loader
+- [x] Marshmallow schemas for all 15 resources
+- [x] Controllers/blueprints for all 15 resources — 89 routes
+- [x] Seed script: 2 estates, 8 users, full catalogue, demo bookings
+- [x] React client: 18 screens wired to the API, role-aware navigation
+- [x] Gate pass codes + a working scanner screen for security
+
+Still to build:
+
+- [ ] File uploads for profile pictures and listing images (URLs for now)
+- [ ] M-Pesa STK push — replaces `settle()` in `payment_controller.py`
+- [ ] A rendered QR image; the code itself already works
+- [ ] Real-time notifications (WebSockets); the bell polls per navigation today
+- [ ] `wallet_transactions` table so top-ups have their own audit trail
 - [ ] Test suite (pytest + an in-memory SQLite app)
 
 ### Before production
