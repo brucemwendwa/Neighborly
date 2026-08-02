@@ -24,14 +24,38 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const status = error.response?.status
+    const data = error.response?.data
+
+    // 401 means the token is missing, expired or belongs to a deleted
+    // account — there is nothing a retry can fix, so drop it and start over.
+    // The login page is excluded: a wrong password there must show an error,
+    // not reload the page underneath the form.
+    if (status === 401 && window.location.pathname !== '/login') {
       localStorage.removeItem('token')
+      localStorage.removeItem('refresh_token')
       localStorage.removeItem('user')
-      if (window.location.pathname !== '/login') window.location.href = '/login'
+      window.location.href = '/login'
     }
-    const message =
-      error.response?.data?.error || error.message || 'Something went wrong'
-    return Promise.reject(new Error(message))
+
+    // Marshmallow answers a failed validation as
+    //   {"error": "Validation failed", "details": {"email": ["..."]}}
+    // Flattening the first field message makes the common case readable,
+    // while `err.details` stays available for per-field display.
+    let message = data?.error || error.message || 'Something went wrong'
+    if (data?.details && typeof data.details === 'object') {
+      const first = Object.entries(data.details)[0]
+      if (first) {
+        const [field, messages] = first
+        const text = Array.isArray(messages) ? messages[0] : String(messages)
+        message = field === '_schema' ? text : `${field}: ${text}`
+      }
+    }
+
+    const normalised = new Error(message)
+    normalised.status = status
+    normalised.details = data?.details
+    return Promise.reject(normalised)
   }
 )
 
