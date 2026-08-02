@@ -24,7 +24,6 @@ from controllers.utils import (
     paginate,
     query_arg,
     require_owner,
-    role_required,
     save,
 )
 
