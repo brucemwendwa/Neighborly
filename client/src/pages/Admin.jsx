@@ -421,7 +421,7 @@ function ServiceForm({ service, categories: categoryList, onClose, onSaved }) {
           label="Starting price (KES)"
           type="number"
           min="0"
-          step="50"
+          step="any"
           name="base_price"
           value={form.base_price}
           onChange={change}
