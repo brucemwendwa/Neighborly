@@ -319,7 +319,7 @@ function PayModal({ booking, outstanding, onClose, onPaid }) {
           type="number"
           min="1"
           max={outstanding}
-          step="1"
+          step="any"
           value={form.amount}
           hint={`${money(outstanding)} still owing. Part payments are allowed.`}
           onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}
