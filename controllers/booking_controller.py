@@ -15,7 +15,6 @@ from flask_jwt_extended import current_user, jwt_required
 from sqlalchemy import or_, select
 from werkzeug.exceptions import Forbidden
 
-from extensions import db
 from models import Booking, Service, ServiceProvider
 from schemas import BookingCreateSchema, BookingSchema, BookingUpdateSchema
 from controllers.utils import (
