@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
-    // Anything the client requests at /api is forwarded to the Express server.
+    // Anything the client requests at /api is forwarded to the Flask API.
     // This keeps the browser on a single origin, so there are no CORS
     // surprises in development and no absolute URLs hardcoded in React.
     proxy: {
