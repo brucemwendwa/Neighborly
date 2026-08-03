@@ -10,6 +10,10 @@ the estate they live in.
 can help you already live near you. The platform's job is to make them findable,
 verifiable and payable.
 
+> **Presenting this project?** [`WALKTHROUGH.md`](WALKTHROUGH.md) has the demo
+> script, a trace of one request through every layer, the design decisions worth
+> defending, and the questions a panel tends to ask.
+
 ---
 
 ## Contents
@@ -25,6 +29,8 @@ verifiable and payable.
 9. [Working with migrations](#9-working-with-migrations)
 10. [Conventions](#10-conventions)
 11. [Roadmap](#11-roadmap)
+
+Presenting it? Start with [`WALKTHROUGH.md`](WALKTHROUGH.md).
 
 ---
 
