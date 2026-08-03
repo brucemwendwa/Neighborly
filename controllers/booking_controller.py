@@ -239,33 +239,64 @@ def update_booking(booking_id):
     role = visible_or_403(booking)
     data = body(BookingUpdateSchema, partial=True)
 
+    # One PATCH can do two different things, so they are handled by two
+    # named functions below. Each returns an error response when it refuses,
+    # or None when it applied the change.
     new_status = data.pop("status", None)
+
     if new_status and new_status != booking.status:
-        if new_status not in TRANSITIONS[booking.status]:
-            return jsonify(
-                error=f"A {booking.status} booking cannot become {new_status}."
-            ), 409
-        if role not in WHO_MAY_SET[new_status]:
-            return jsonify(
-                error=f"As the {role} you cannot mark this booking {new_status}."
-            ), 403
+        refused = change_status(booking, role, new_status)
+        if refused:
+            return refused
 
-        booking.status = new_status
-        announce_status(booking, role, new_status)
+    if data:
+        refused = edit_details(booking, role, data)
+        if refused:
+            return refused
 
-    # Money and scheduling are only negotiable before work starts.
-    if data and booking.status in ("pending", "accepted"):
-        if "provider_id" in data and role != "admin" and role != "customer":
-            return jsonify(error="Only the customer can reassign a booking."), 403
-        for field, value in data.items():
-            setattr(booking, field, value)
-    elif data:
+    save(booking)
+    return jsonify(booking=booking_schema.dump(booking))
+
+
+def change_status(booking, role, new_status):
+    """Move the booking to `new_status`, or refuse and say why.
+
+    Two gates, and both have to pass:
+      1. is the transition legal from where the booking is now?
+      2. is this person entitled to ask for it?
+    """
+    if new_status not in TRANSITIONS[booking.status]:
+        return jsonify(
+            error=f"A {booking.status} booking cannot become {new_status}."
+        ), 409
+
+    if role not in WHO_MAY_SET[new_status]:
+        return jsonify(
+            error=f"As the {role} you cannot mark this booking {new_status}."
+        ), 403
+
+    booking.status = new_status
+    announce_status(booking, role, new_status)
+    return None
+
+
+def edit_details(booking, role, data):
+    """Change the price, the schedule or the provider.
+
+    Only negotiable before work starts: renegotiating the price of a job
+    that is already finished is not an edit, it is a dispute.
+    """
+    if booking.status not in ("pending", "accepted"):
         return jsonify(
             error=f"A {booking.status} booking's details can no longer be changed."
         ), 409
 
-    save(booking)
-    return jsonify(booking=booking_schema.dump(booking))
+    if "provider_id" in data and role == "provider":
+        return jsonify(error="Only the customer can reassign a booking."), 403
+
+    for field, value in data.items():
+        setattr(booking, field, value)
+    return None
 
 
 def announce_status(booking, actor_role, status):
