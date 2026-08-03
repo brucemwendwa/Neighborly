@@ -267,6 +267,7 @@ No code changes needed.
 | `pipenv run flask --app main db upgrade` | Apply pending migrations |
 | `pipenv run flask --app main db downgrade` | Roll back one migration |
 | `pipenv run flask --app main db history` | List all migrations |
+| `pipenv run python seed.py` | Wipe and reload the demo data |
 | `cd client && npm run dev` | Vite dev server with hot reload |
 | `cd client && npm run build` | Production bundle into `client/dist/` |
 
