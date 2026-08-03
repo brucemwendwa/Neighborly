@@ -33,6 +33,21 @@ dashboard_bp = Blueprint("dashboard", __name__)
 
 
 def count(stmt):
+    """How many rows would this query return?
+
+    Takes a normal `select(Model).where(...)` and swaps the columns for
+    COUNT(*), keeping the WHERE clause. So this:
+
+        select(Booking).where(Booking.status == "pending")
+
+    is sent to the database as:
+
+        SELECT count(*) FROM bookings WHERE status = 'pending'
+
+    That matters: the alternative — loading every booking and calling len()
+    in Python — pulls the whole table over the wire to produce one number.
+    `order_by(None)` drops any sort, which a COUNT has no use for.
+    """
     return db.session.scalar(stmt.with_only_columns(func.count()).order_by(None)) or 0
 
 
