@@ -128,6 +128,7 @@ Neighborly/
 │   │   ├── hooks/useApi.js       useApi (read) + useAction (write)
 │   │   ├── utils/format.js       money, dates, labels, initials
 │   │   ├── pages/                18 screens — one file each
+│   │   └── admin/            the console's six tabs, one file per tab
 │   │   ├── App.jsx               Route table
 │   │   ├── main.jsx              React entry point
 │   │   └── index.css             Design system: tokens, primitives, layouts
@@ -184,7 +185,7 @@ Neighborly/
 ```
 
 Every layer is now implemented: 15 models, 15 schema modules, 16 blueprints
-(**89 routes**) and 18 client screens wired to them. [Section 8](#8-api-reference)
+(**88 API routes**) and 18 client screens wired to them. [Section 8](#8-api-reference)
 is the endpoint reference.
 
 ---
@@ -767,7 +768,7 @@ Built:
 
 - [x] Auth: register, login, refresh, `role_required`, JWT user loader
 - [x] Marshmallow schemas for all 15 resources
-- [x] Controllers/blueprints for all 15 resources — 89 routes
+- [x] Controllers/blueprints for all 15 resources — 88 API routes
 - [x] Seed script: 2 estates, 8 users, full catalogue, demo bookings
 - [x] React client: 18 screens wired to the API, role-aware navigation
 - [x] Gate pass codes + a working scanner screen for security
