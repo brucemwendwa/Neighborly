@@ -1,21 +1,21 @@
 /**
  * The whole API surface, in one place.
  *
- * Components never build URLs or touch axios directly — they call these
+ * Components never build URLs or call fetch directly — they call these
  * functions. Two things fall out of that:
  *   - when an endpoint changes, exactly one file changes
  *   - every call already carries the auth header and shared error handling
  *     from api/client.js
  *
- * Each function returns the response *body*, not the axios envelope, so a
+ * Each function returns the parsed response *body*, so a
  * component writes `const { items } = await listings.list()`.
  */
 import api from './client'
 
-const get = (url, params) => api.get(url, { params }).then((r) => r.data)
-const post = (url, body) => api.post(url, body).then((r) => r.data)
-const patch = (url, body) => api.patch(url, body).then((r) => r.data)
-const del = (url) => api.delete(url).then((r) => r.data)
+const get = (url, params) => api.get(url, params)
+const post = (url, body) => api.post(url, body)
+const patch = (url, body) => api.patch(url, body)
+const del = (url) => api.delete(url)
 
 export const auth = {
   register: (payload) => post('/auth/register', payload),
@@ -158,6 +158,7 @@ export const notifications = {
 export const dashboard = {
   get: () => get('/dashboard'),
   admin: () => get('/dashboard/admin'),
+  insights: () => get('/dashboard/insights'),
 }
 
 export const users = {
