@@ -70,9 +70,26 @@ async function request(method, path, { params, body } = {}) {
 
   // 204 and friends have no body to parse.
   const text = await response.text()
-  const data = text ? JSON.parse(text) : null
 
-  if (response.ok) return data
+  // Only our own handlers answer in JSON. A crashed serverless function, a
+  // gateway timeout or a proxy's HTML error page all land here as plain text,
+  // and an unguarded JSON.parse would surface its own SyntaxError — "Unexpected
+  // token 'A'" — as the message on the form, hiding the status that actually
+  // explains what went wrong.
+  let data = null
+  let isJson = true
+  if (text) {
+    try {
+      data = JSON.parse(text)
+    } catch {
+      isJson = false
+    }
+  }
+
+  if (response.ok) {
+    if (!isJson) throw new Error('The server sent a response the app could not read.')
+    return data
+  }
 
   // 401 means the token is missing, expired or belongs to a deleted account —
   // there is nothing a retry can fix, so drop it and start over. The sign-in
@@ -85,7 +102,15 @@ async function request(method, path, { params, body } = {}) {
     window.location.href = '/sign-in'
   }
 
-  throw toError(response.status, data, response.statusText)
+  // A non-JSON body means the request never reached a route handler, so there
+  // is no `error` field to read and the status is all we can honestly report.
+  const fallback = isJson
+    ? response.statusText
+    : response.status >= 500
+      ? `The server is not responding correctly (${response.status}). Please try again shortly.`
+      : `Request failed (${response.status}).`
+
+  throw toError(response.status, data, fallback)
 }
 
 const api = {
