@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { requests } from '../api'
 import { useApi } from '../hooks/useApi'
-import { PageHeader, Results, StatusBadge } from '../components/ui'
+import { Empty, PageHeader, Results, StatusBadge } from '../components/ui'
 import { money, relative } from '../utils/format'
 
 /**
@@ -13,7 +13,7 @@ import { money, relative } from '../utils/format'
  * booking and this page hands it over.
  */
 export default function Requests() {
-  const { data, loading, error, refetch } = useApi(() => requests.mine(), [])
+  const { data, loading, error, reload } = useApi(() => requests.mine(), [])
 
   return (
     <>
@@ -29,17 +29,20 @@ export default function Requests() {
       <Results
         loading={loading}
         error={error}
-        onRetry={refetch}
+        onRetry={reload}
         items={data?.items}
-        empty={{
-          title: 'No requests yet',
-          body: 'Describe a job and providers in your estate will quote for it.',
-          action: (
-            <Link to="/services/request" className="btn btn-sm">
-              Post a request
-            </Link>
-          ),
-        }}
+        empty={
+          <Empty
+            title="No requests yet"
+            action={
+              <Link to="/services/request" className="btn btn-sm">
+                Post a request
+              </Link>
+            }
+          >
+            Describe a job and providers in your estate will quote for it.
+          </Empty>
+        }
       >
         <div className="list">
           {data?.items?.map((item) => (
