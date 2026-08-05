@@ -2,7 +2,13 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { ToastProvider } from './context/ToastContext'
-import { RESIDENT_NAV, COMMUTE_SUBNAV, SECURITY_NAV, PLATFORM_NAV } from './config/nav'
+import {
+  RESIDENT_NAV,
+  COMMUTE_SUBNAV,
+  PROVIDER_NAV,
+  SECURITY_NAV,
+  PLATFORM_NAV,
+} from './config/nav'
 import PublicLayout from './components/PublicLayout'
 import AuthLayout from './components/AuthLayout'
 import WorkspaceShell from './components/WorkspaceShell'
@@ -13,6 +19,9 @@ import Dashboard from './pages/Dashboard'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Services from './pages/Services'
+import Requests from './pages/Requests'
+import RequestNew from './pages/RequestNew'
+import RequestDetail from './pages/RequestDetail'
 import ServiceDetail from './pages/ServiceDetail'
 import Bookings from './pages/Bookings'
 import BookingDetail from './pages/BookingDetail'
@@ -26,6 +35,8 @@ import Wallet from './pages/Wallet'
 import Notifications from './pages/Notifications'
 import Profile from './pages/Profile'
 import NotFound from './pages/NotFound'
+
+import OpenRequests from './pages/provider/OpenRequests'
 
 import Overview from './pages/admin/Overview'
 import ProviderQueue from './pages/admin/ProviderQueue'
@@ -84,7 +95,31 @@ export default function App() {
                   }
                 />
                 <Route path="services" element={<Services />} />
+                <Route
+                  path="services/request"
+                  element={
+                    <ProtectedRoute>
+                      <RequestNew />
+                    </ProtectedRoute>
+                  }
+                />
                 <Route path="services/:serviceId" element={<ServiceDetail />} />
+                <Route
+                  path="requests"
+                  element={
+                    <ProtectedRoute>
+                      <Requests />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="requests/:requestId"
+                  element={
+                    <ProtectedRoute>
+                      <RequestDetail />
+                    </ProtectedRoute>
+                  }
+                />
                 <Route path="find-and-move" element={<Listings />} />
                 <Route path="find-and-move/moving" element={<Moves />} />
                 <Route path="find-and-move/:listingId" element={<ListingDetail />} />
@@ -141,6 +176,34 @@ export default function App() {
               {/* --- Commute workspace ------------------------------------- */}
               <Route element={<WorkspaceShell nav={RESIDENT_NAV} subnav={COMMUTE_SUBNAV} />}>
                 <Route path="commute" element={<Rides />} />
+              </Route>
+
+              {/* --- Provider workspace ------------------------------------ */}
+              <Route element={<WorkspaceShell nav={PROVIDER_NAV} title="Provider" />}>
+                <Route
+                  path="provider/requests"
+                  element={
+                    <ProtectedRoute roles={['provider', 'admin']}>
+                      <OpenRequests />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="provider/jobs"
+                  element={
+                    <ProtectedRoute roles={['provider', 'admin']}>
+                      <Bookings />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="provider/profile"
+                  element={
+                    <ProtectedRoute roles={['provider', 'admin']}>
+                      <Profile />
+                    </ProtectedRoute>
+                  }
+                />
               </Route>
 
               {/* --- Security workspace ------------------------------------ */}
