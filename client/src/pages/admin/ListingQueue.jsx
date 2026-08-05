@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { listings } from '../../api'
 import { useApi, useAction } from '../../hooks/useApi'
 import { useToast } from '../../context/ToastContext'
-import { Empty, Field, Results, StatusBadge } from '../../components/ui'
+import { Empty, Field, PageHeader, Results, StatusBadge } from '../../components/ui'
 import { money } from '../../utils/format'
 
 /** Listing verification — the badge a renter actually trusts. */
@@ -27,6 +27,10 @@ export default function ListingQueue() {
 
   return (
     <>
+      <PageHeader
+        title="Listings"
+        description="Verify vacant units before residents can see them."
+      />
       <div className="filters">
         <Field
           label="Show"
@@ -62,7 +66,7 @@ export default function ListingQueue() {
               {data?.items?.map((listing) => (
                 <tr key={listing.listing_id}>
                   <td>
-                    <Link to={`/listings/${listing.listing_id}`} className="btn-link">
+                    <Link to={`/find-and-move/${listing.listing_id}`} className="btn-link">
                       {listing.title}
                     </Link>
                   </td>
