@@ -163,7 +163,7 @@ export function ListingCard({ listing, children }) {
         {listing.estate?.estate_name} · listed {relative(listing.created_at)}
       </p>
       <div className="row" style={{ marginTop: '0.9rem' }}>
-        <Link to={`/listings/${listing.listing_id}`} className="btn btn-ghost btn-sm">
+        <Link to={`/find-and-move/${listing.listing_id}`} className="btn btn-ghost btn-sm">
           View
         </Link>
         {children}
