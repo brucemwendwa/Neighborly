@@ -5,7 +5,7 @@ import { auth } from '../api'
  * Holds the signed-in user for the whole app.
  *
  * Two pieces of state, deliberately stored differently:
- *   the token  -> localStorage, read back by the axios interceptor in
+ *   the token  -> localStorage, read back by the fetch wrapper in
  *                 api/client.js so every request carries it
  *   the user   -> React state (mirrored to localStorage) because the UI
  *                 re-renders when it changes
