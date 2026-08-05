@@ -15,6 +15,7 @@ from sqlalchemy import func, select
 from extensions import db
 from models import (
     Booking,
+    JobQuote,
     CommuteRide,
     GatePass,
     HouseListing,
@@ -22,7 +23,10 @@ from models import (
     Notification,
     Payment,
     RideBooking,
+    Service,
+    ServiceCategory,
     ServiceProvider,
+    ServiceRequest,
     User,
 )
 from models.base import utcnow
@@ -191,4 +195,86 @@ def admin_dashboard():
                 or Decimal("0")
             ),
         }
+    )
+
+
+@dashboard_bp.get("/insights")
+@role_required("admin")
+def insights():
+    """GET /api/dashboard/insights — the analytics the admin overview shows.
+
+    Three queries that each do real work in SQL rather than in Python:
+
+      1. revenue by category — joins bookings -> services -> categories,
+         groups by category, and uses HAVING to drop categories nobody has
+         ever booked. Counting in Python would mean pulling every booking
+         row across the wire to throw most of them away.
+
+      2. top providers — joins providers -> users -> bookings, aggregates
+         completed jobs and money earned per provider, and orders by the
+         aggregate. HAVING again, so providers with nothing completed do
+         not occupy the leaderboard.
+
+      3. busiest requesters — groups the marketplace by resident and counts
+         the quotes their requests attracted, which needs both the request
+         and quote tables in one statement.
+    """
+    # 1. Revenue and volume per service category.
+    by_category = db.session.execute(
+        select(
+            ServiceCategory.name,
+            func.count(Booking.booking_id).label("bookings"),
+            func.coalesce(func.sum(Booking.total_amount), 0).label("value"),
+        )
+        .join(Service, Service.category_id == ServiceCategory.category_id)
+        .join(Booking, Booking.service_id == Service.service_id)
+        .group_by(ServiceCategory.category_id)
+        .having(func.count(Booking.booking_id) > 0)
+        .order_by(func.sum(Booking.total_amount).desc())
+    ).all()
+
+    # 2. Providers ranked by completed work.
+    top_providers = db.session.execute(
+        select(
+            User.full_name,
+            func.count(Booking.booking_id).label("jobs"),
+            func.coalesce(func.sum(Booking.total_amount), 0).label("earned"),
+        )
+        .join(ServiceProvider, ServiceProvider.user_id == User.user_id)
+        .join(Booking, Booking.provider_id == ServiceProvider.provider_id)
+        .where(Booking.status == "completed")
+        .group_by(User.user_id)
+        .having(func.count(Booking.booking_id) > 0)
+        .order_by(func.sum(Booking.total_amount).desc())
+        .limit(5)
+    ).all()
+
+    # 3. Which residents are actually using the marketplace.
+    demand = db.session.execute(
+        select(
+            User.full_name,
+            func.count(func.distinct(ServiceRequest.request_id)).label("requests"),
+            func.count(JobQuote.quote_id).label("quotes_received"),
+        )
+        .join(ServiceRequest, ServiceRequest.resident_id == User.user_id)
+        .outerjoin(JobQuote, JobQuote.request_id == ServiceRequest.request_id)
+        .group_by(User.user_id)
+        .having(func.count(func.distinct(ServiceRequest.request_id)) > 0)
+        .order_by(func.count(JobQuote.quote_id).desc())
+        .limit(5)
+    ).all()
+
+    return jsonify(
+        revenue_by_category=[
+            {"category": name, "bookings": count, "value": str(value)}
+            for name, count, value in by_category
+        ],
+        top_providers=[
+            {"provider": name, "jobs": jobs, "earned": str(earned)}
+            for name, jobs, earned in top_providers
+        ],
+        demand_by_resident=[
+            {"resident": name, "requests": requests, "quotes_received": quotes}
+            for name, requests, quotes in demand
+        ],
     )
