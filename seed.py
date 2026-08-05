@@ -27,6 +27,8 @@ from main import create_app
 from extensions import db
 from models import (
     Booking,
+    JobQuote,
+    JobStatusEvent,
     CommuteRide,
     Estate,
     GatePass,
@@ -37,6 +39,7 @@ from models import (
     Review,
     RideBooking,
     Service,
+    ServiceRequest,
     ServiceCategory,
     ServiceProvider,
     User,
@@ -54,7 +57,10 @@ def wipe():
         Payment,
         GatePass,
         RideBooking,
+        JobStatusEvent,
+        JobQuote,
         Booking,
+        ServiceRequest,
         CommuteRide,
         MoveRequest,
         HouseListing,
@@ -445,6 +451,115 @@ def seed():
         ]
     )
 
+    # --- The quote marketplace ---------------------------------------------
+    # Two requests in different states, so the join tables are never empty and
+    # the demo can show both sides: one still collecting bids, one already
+    # won and turned into a booking.
+    open_request = ServiceRequest(
+        resident_id=amina.user_id,
+        estate_id=greenview.estate_id,
+        category_id=services["Plumbing"].category_id,
+        kind="skilled",
+        title="Blocked shower drain",
+        description="Water pools and drains very slowly. Upstairs bathroom.",
+        budget_min=Decimal(500),
+        budget_max=Decimal(2500),
+        status="quoting",
+    )
+    won_request = ServiceRequest(
+        resident_id=brian.user_id,
+        estate_id=greenview.estate_id,
+        service_id=services["House Cleaning"].service_id,
+        kind="skilled",
+        title="Deep clean before handover",
+        description="Three bedrooms, moving out at the end of the month.",
+        budget_min=Decimal(2000),
+        budget_max=Decimal(4000),
+        status="assigned",
+    )
+    db.session.add_all([open_request, won_request])
+    db.session.flush()
+
+    # Two providers bidding against each other on the open one.
+    db.session.add_all(
+        [
+            JobQuote(
+                request_id=open_request.request_id,
+                provider_id=caleb.provider_profile.provider_id,
+                amount=Decimal(1800),
+                message="Includes drain rods and a new trap if the old one is cracked.",
+                eta_minutes=90,
+                status="pending",
+            ),
+            JobQuote(
+                request_id=open_request.request_id,
+                provider_id=dorcas.provider_profile.provider_id,
+                amount=Decimal(1400),
+                message="Can come this evening after 6pm.",
+                eta_minutes=240,
+                status="pending",
+            ),
+        ]
+    )
+
+    # The won one: an accepted quote, and the booking it produced.
+    won_quote = JobQuote(
+        request_id=won_request.request_id,
+        provider_id=dorcas.provider_profile.provider_id,
+        amount=Decimal(3200),
+        message="Full deep clean, two cleaners, about four hours.",
+        eta_minutes=1440,
+        status="accepted",
+    )
+    quoted_booking = Booking(
+        user_id=brian.user_id,
+        provider_id=dorcas.provider_profile.provider_id,
+        service_id=services["House Cleaning"].service_id,
+        estate_id=greenview.estate_id,
+        request_id=won_request.request_id,
+        booking_type="quotation",
+        status="accepted",
+        scheduled_date=now + timedelta(days=5),
+        total_amount=Decimal(3200),
+    )
+    db.session.add_all([won_quote, quoted_booking])
+    db.session.flush()
+
+    # The immutable trail each request left behind.
+    db.session.add_all(
+        [
+            JobStatusEvent(
+                request_id=open_request.request_id,
+                event_type="created",
+                actor_id=amina.user_id,
+            ),
+            JobStatusEvent(
+                request_id=open_request.request_id,
+                event_type="quoted",
+                actor_id=caleb.user_id,
+                note="Caleb Mwangi quoted",
+            ),
+            JobStatusEvent(
+                request_id=open_request.request_id,
+                event_type="quoted",
+                actor_id=dorcas.user_id,
+                note="Dorcas Wanjiru quoted",
+            ),
+            JobStatusEvent(
+                request_id=won_request.request_id,
+                event_type="created",
+                actor_id=brian.user_id,
+            ),
+            JobStatusEvent(
+                request_id=won_request.request_id,
+                booking_id=quoted_booking.booking_id,
+                event_type="accepted",
+                actor_id=brian.user_id,
+                note="Dorcas Wanjiru accepted at KES 3200",
+            ),
+        ]
+    )
+
     db.session.commit()
 
     print("Seeded:")
@@ -453,6 +568,9 @@ def seed():
     print(f"  categories  {db.session.query(ServiceCategory).count()}")
     print(f"  services    {db.session.query(Service).count()}")
     print(f"  bookings    {db.session.query(Booking).count()}")
+    print(f"  requests    {db.session.query(ServiceRequest).count()}")
+    print(f"  job quotes  {db.session.query(JobQuote).count()}")
+    print(f"  job events  {db.session.query(JobStatusEvent).count()}")
     print(f"  payments    {db.session.query(Payment).count()}")
     print(f"  listings    {db.session.query(HouseListing).count()}")
     print(f"  rides       {db.session.query(CommuteRide).count()}")
