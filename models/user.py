@@ -50,6 +50,7 @@ class User(TimestampMixin, db.Model):
 
     # One-to-many
     bookings = db.relationship("Booking", back_populates="customer")
+    service_requests = db.relationship("ServiceRequest", back_populates="resident")
     payments = db.relationship("Payment", back_populates="payer")
     listings = db.relationship("HouseListing", back_populates="landlord")
     move_requests = db.relationship("MoveRequest", back_populates="requester")
