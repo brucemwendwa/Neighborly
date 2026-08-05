@@ -23,6 +23,7 @@ there is no window where a request is spoken for but no booking exists:
 from flask import Blueprint, jsonify
 from flask_jwt_extended import current_user, jwt_required
 from sqlalchemy import select
+from sqlalchemy.orm import joinedload, selectinload
 from werkzeug.exceptions import Forbidden
 
 from extensions import db
@@ -129,7 +130,14 @@ def list_requests():
     if kind := query_arg("kind"):
         stmt = stmt.where(ServiceRequest.kind == kind)
 
-    stmt = stmt.order_by(ServiceRequest.created_at.desc())
+    # Each row renders its quote count and lowest bid, and the schema reads
+    # those off request.quotes. Without eager loading that is one extra
+    # SELECT per request — the N+1 problem — so the quotes (and the provider
+    # behind each one) are fetched in the same round trip.
+    stmt = stmt.options(
+        selectinload(ServiceRequest.quotes).joinedload(JobQuote.provider),
+        joinedload(ServiceRequest.service),
+    ).order_by(ServiceRequest.created_at.desc())
     return jsonify(paginate(stmt, ServiceRequestListSchema))
 
 
