@@ -1,6 +1,6 @@
 import { dashboard } from '../../api'
 import { useApi } from '../../hooks/useApi'
-import { Loading, Stat } from '../../components/ui'
+import { Loading, PageHeader, Stat } from '../../components/ui'
 import { money } from '../../utils/format'
 
 /** The Overview tab — platform-wide totals from GET /api/dashboard/admin. */
@@ -11,7 +11,12 @@ export default function Overview() {
 
   const s = data.summary
   return (
-    <section className="stats">
+    <>
+      <PageHeader
+        title="Global overview"
+        description="Platform-wide totals across every estate."
+      />
+      <section className="stats">
       <Stat value={s.users} label="Users" />
       <Stat value={s.residents} label="Residents" />
       <Stat value={s.providers} label="Providers" />
@@ -23,6 +28,7 @@ export default function Overview() {
       <Stat value={s.rides_active} label="Active rides" />
       <Stat value={s.moves_open} label="Open moves" />
       <Stat value={money(s.revenue)} label="Payments cleared" />
-    </section>
+      </section>
+    </>
   )
 }
