@@ -33,6 +33,15 @@ from schemas.catalogue import (
 )
 from schemas.estate import EstateInputSchema, EstateSchema
 from schemas.gate_pass import GatePassInputSchema, GatePassSchema, GatePassStatusSchema
+from schemas.job import (
+    JobQuoteInputSchema,
+    JobQuoteSchema,
+    JobStatusEventSchema,
+    ServiceRequestInputSchema,
+    ServiceRequestListSchema,
+    ServiceRequestSchema,
+    ServiceRequestUpdateSchema,
+)
 from schemas.listing import (
     HouseListingInputSchema,
     HouseListingSchema,
@@ -104,6 +113,14 @@ __all__ = [
     "ServiceProviderSchema",
     "ProviderInputSchema",
     "ProviderVerificationSchema",
+    # Jobs marketplace
+    "ServiceRequestSchema",
+    "ServiceRequestListSchema",
+    "ServiceRequestInputSchema",
+    "ServiceRequestUpdateSchema",
+    "JobQuoteSchema",
+    "JobQuoteInputSchema",
+    "JobStatusEventSchema",
     # Bookings
     "BookingSchema",
     "BookingCreateSchema",
