@@ -22,6 +22,9 @@ class Estate(CreatedAtMixin, db.Model):
     # --- Relationships (the "one" side of one-to-many) ---
     users = db.relationship("User", back_populates="estate", lazy="select")
     bookings = db.relationship("Booking", back_populates="estate", lazy="select")
+    service_requests = db.relationship(
+        "ServiceRequest", back_populates="estate", lazy="select"
+    )
     listings = db.relationship("HouseListing", back_populates="estate", lazy="select")
     rides = db.relationship("CommuteRide", back_populates="estate", lazy="select")
 
