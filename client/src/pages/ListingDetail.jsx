@@ -91,7 +91,7 @@ export default function ListingDetail() {
                 your admin to arrange a viewing.
               </p>
             ) : (
-              <Link to="/login" className="btn btn-block" style={{ marginTop: '1rem' }}>
+              <Link to="/sign-in" className="btn btn-block" style={{ marginTop: '1rem' }}>
                 Sign in to enquire
               </Link>
             )}
@@ -118,7 +118,7 @@ export default function ListingDetail() {
       </div>
 
       <p style={{ marginTop: '2rem' }}>
-        <Link to="/listings" className="btn-link">
+        <Link to="/find-and-move" className="btn-link">
           ← Back to housing
         </Link>
       </p>
