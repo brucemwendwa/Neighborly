@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { ROLE_HOME } from '../config/nav'
 import { Field } from '../components/ui'
 
 /**
@@ -31,8 +32,12 @@ export default function Login() {
     e.preventDefault()
     setError(null)
     try {
-      await login(form)
-      navigate(location.state?.from?.pathname || '/', { replace: true })
+      const signedIn = await login(form)
+      // Back to wherever ProtectedRoute intercepted them, otherwise into their
+      // own workspace — a guard signing in wants the gate desk, not the
+      // resident dashboard they have no use for.
+      const fallback = ROLE_HOME[signedIn.role] ?? '/home'
+      navigate(location.state?.from?.pathname || fallback, { replace: true })
     } catch (err) {
       setError(err.message)
     }
