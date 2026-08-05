@@ -1,0 +1,28 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+
+  "services": {
+    "web": {
+      "root": "client/",
+      "framework": "vite",
+      "outputDirectory": "dist",
+      "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+    },
+
+    "api": {
+      "root": "./",
+      "entrypoint": "main:app",
+      "functions": {
+        "main.py": {
+          "maxDuration": 30,
+          "excludeFiles": "{client/**,migrations/**,seed.py,*.db,*.db.backup-*,*.md,.env*}"
+        }
+      }
+    }
+  },
+
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": { "service": "api" } },
+    { "source": "/(.*)", "destination": { "service": "web" } }
+  ]
+}
