@@ -20,6 +20,8 @@ env/
 *.db
 *.sqlite
 *.sqlite3
+# Timestamped backups: *.db does not match "neighborly.db.backup-20260805".
+*.db.backup-*
 
 # --- Node / client ---
 node_modules/
