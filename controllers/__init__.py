@@ -35,6 +35,7 @@ from controllers.notification_controller import notification_bp
 from controllers.payment_controller import payment_bp, wallet_bp
 from controllers.provider_controller import provider_bp
 from controllers.review_controller import review_bp
+from controllers.job_controller import job_bp
 from controllers.ride_controller import ride_bp
 from controllers.user_controller import user_bp
 
@@ -46,6 +47,7 @@ BLUEPRINTS = (
     (category_bp, "/api/categories"),
     (service_bp, "/api/services"),
     (provider_bp, "/api/providers"),
+    (job_bp, "/api/requests"),
     (booking_bp, "/api/bookings"),
     (payment_bp, "/api/payments"),
     (wallet_bp, "/api/wallet"),
