@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { categories, services } from '../../api'
 import { useApi, useAction } from '../../hooks/useApi'
 import { useToast } from '../../context/ToastContext'
-import { Empty, Field, Modal, Results } from '../../components/ui'
+import { Empty, Field, Modal, PageHeader, Results } from '../../components/ui'
 import { money } from '../../utils/format'
 
 /** The shared service catalogue: what residents can book, and for how much. */
@@ -21,12 +21,14 @@ export default function Catalogue() {
 
   return (
     <>
-      <div className="row-between" style={{ marginBottom: '1rem' }}>
-        <h2>Services</h2>
+      <PageHeader
+        title="Services"
+        description="The shared catalogue every estate books from."
+      >
         <button type="button" className="btn" onClick={() => setEditing({})}>
           Add service
         </button>
-      </div>
+      </PageHeader>
 
       <Results
         loading={svcs.loading}
