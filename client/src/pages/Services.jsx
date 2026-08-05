@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { categories, services } from '../api'
 import { useApi } from '../hooks/useApi'
+import { useAuth } from '../context/AuthContext'
 import { Field, PageHeader, Pagination, Results, Empty } from '../components/ui'
 import { ServiceCard } from '../components/cards'
 
@@ -16,6 +17,7 @@ import { ServiceCard } from '../components/cards'
 export default function Services() {
   const [params, setParams] = useSearchParams()
   const [draft, setDraft] = useState(params.get('q') || '')
+  const { isAuthenticated } = useAuth()
 
   const q = params.get('q') || ''
   const categoryId = params.get('category_id') || ''
@@ -49,7 +51,20 @@ export default function Services() {
         title="Services"
         description="Vetted providers working inside your estate. Prices shown are the
           starting point — the exact figure is agreed on the booking."
-      />
+      >
+        {/* The other way in: if nothing in the catalogue fits, describe the
+            job instead and let providers price it. */}
+        {isAuthenticated && (
+          <>
+            <Link to="/requests" className="btn btn-ghost btn-sm">
+              My requests
+            </Link>
+            <Link to="/services/request" className="btn btn-sm">
+              Post a request
+            </Link>
+          </>
+        )}
+      </PageHeader>
 
       <form
         className="filters"
