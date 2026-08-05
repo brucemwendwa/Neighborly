@@ -33,6 +33,25 @@ def utcnow():
     return datetime.now(timezone.utc)
 
 
+def as_utc(value):
+    """Return `value` as an aware UTC datetime, or None.
+
+    SQLite has no timezone type, so a `DateTime(timezone=True)` column hands
+    its value back *naive* even though what was stored is UTC. Postgres hands
+    the same column back aware. Comparing a naive value against `utcnow()`
+    raises TypeError — which is a 500 on whichever endpoint does the
+    comparing — so any timestamp read off a model has to come through here
+    before it is compared in Python.
+
+    Adding the offset only when it is missing keeps one code path correct on
+    both backends: a no-op on Postgres, the missing UTC label on SQLite.
+    (`UTCDateTime` in schemas/base.py does the same thing on the way out.)
+    """
+    if value is None or value.tzinfo is not None:
+        return value
+    return value.replace(tzinfo=timezone.utc)
+
+
 class TimestampMixin:
     """Adds created_at / updated_at, maintained by the database layer."""
 
