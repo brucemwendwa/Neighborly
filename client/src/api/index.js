@@ -60,6 +60,23 @@ export const providers = {
   setVerification: (id, payload) => patch(`/providers/${id}/verification`, payload),
 }
 
+/**
+ * The quote marketplace. A request is what a resident posts before anybody
+ * has priced the work; accepting one of its quotes is what creates a booking,
+ * so everything past that point is handled by `bookings` below.
+ */
+export const requests = {
+  list: (params) => get('/requests', params),
+  mine: (params) => get('/requests', { ...params, mine: 'true' }),
+  get: (id) => get(`/requests/${id}`),
+  create: (payload) => post('/requests', payload),
+  update: (id, payload) => patch(`/requests/${id}`, payload),
+  cancel: (id) => del(`/requests/${id}`),
+  quote: (id, payload) => post(`/requests/${id}/quotes`, payload),
+  withdrawQuote: (id) => del(`/requests/${id}/quotes/mine`),
+  acceptQuote: (id, quoteId) => post(`/requests/${id}/quotes/${quoteId}/accept`),
+}
+
 export const bookings = {
   list: (params) => get('/bookings', params),
   available: (params) => get('/bookings/available', params),
