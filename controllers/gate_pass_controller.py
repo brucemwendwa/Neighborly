@@ -17,7 +17,7 @@ from sqlalchemy import select
 
 from extensions import db
 from models import Booking, GatePass
-from models.base import utcnow
+from models.base import as_utc, utcnow
 from schemas import GatePassInputSchema, GatePassSchema, GatePassStatusSchema
 from controllers.utils import (
     body,
@@ -74,7 +74,9 @@ def lookup(qr_code):
     if gate_pass is None:
         return jsonify(error="No pass matches that code."), 404
 
-    expired = gate_pass.exit_date is not None and gate_pass.exit_date < utcnow()
+    # as_utc, because SQLite returns this column naive and comparing it
+    # against an aware utcnow() raises — a 500 on the one screen a guard uses.
+    expired = gate_pass.exit_date is not None and as_utc(gate_pass.exit_date) < utcnow()
     if expired and gate_pass.status == "active":
         gate_pass.status = "expired"
         save(gate_pass)
