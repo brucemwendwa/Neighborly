@@ -19,8 +19,47 @@ ignored rather than a 400. The alternative (RAISE) turns every harmless
 extra field into a failed request.
 """
 
+from datetime import timezone
+
+import sqlalchemy as sa
 from marshmallow import EXCLUDE, Schema, fields
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
+from marshmallow_sqlalchemy.convert import ModelConverter
+
+
+class UTCDateTime(fields.DateTime):
+    """A datetime that always leaves with its timezone attached.
+
+    Every timestamp is stored in UTC, but SQLite has no timezone type and
+    hands the value back naive. Marshmallow then serialises it as
+    "2026-08-05T13:44:40" — no offset — and `new Date(...)` in the browser
+    reads an offset-less string as *local* time. In Nairobi that shifted
+    every timestamp three hours into the past, so a request posted a moment
+    ago rendered as "3 hours ago".
+
+    Marking the value UTC before it is formatted makes the wire format
+    unambiguous, which fixes it for every client rather than asking each one
+    to know the convention.
+    """
+
+    def _serialize(self, value, attr, obj, **kwargs):
+        if value is not None and value.tzinfo is None:
+            value = value.replace(tzinfo=timezone.utc)
+        return super()._serialize(value, attr, obj, **kwargs)
+
+
+class UTCModelConverter(ModelConverter):
+    """Makes the auto-schemas reach for UTCDateTime.
+
+    Response schemas derive their fields from the SQLAlchemy column types, so
+    swapping the mapping here is what applies the fix across every model at
+    once — no schema has to remember to declare its own timestamp fields.
+    """
+
+    SQLA_TYPE_MAPPING = {
+        **ModelConverter.SQLA_TYPE_MAPPING,
+        sa.DateTime: UTCDateTime,
+    }
 
 
 class BaseSchema(Schema):
@@ -51,6 +90,9 @@ class BaseAutoSchema(SQLAlchemyAutoSchema):
         # Expose foreign keys (user_id, estate_id...). The client needs them
         # to link records without a second round trip.
         include_fk = True
+
+        # Timestamps leave with an explicit UTC offset — see UTCDateTime.
+        model_converter = UTCModelConverter
 
 
 def money(**kwargs):
