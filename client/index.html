@@ -9,6 +9,20 @@
       content="Jirani Hub — services, housing, moving and commuting for your estate."
     />
     <title>Jirani Hub</title>
+    <script>
+      // Apply a saved light/dark choice before the first paint. React sets the
+      // same attribute once ThemeContext mounts, but that is a frame too late
+      // and the wrong palette would flash on every reload. No stored value
+      // means "follow the OS", which the stylesheet already handles.
+      try {
+        var saved = localStorage.getItem('theme')
+        if (saved === 'light' || saved === 'dark') {
+          document.documentElement.dataset.theme = saved
+        }
+      } catch (e) {
+        /* localStorage can throw in private browsing — the OS default stands. */
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
