@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { rides } from '../api'
 import { useApi, useAction } from '../hooks/useApi'
+import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import { Empty, Field, Modal, PageHeader, Pagination, Results, StatusBadge } from '../components/ui'
 import { RideCard } from '../components/cards'
@@ -15,6 +16,7 @@ import { dateTime, money, toApiDate } from '../utils/format'
  */
 export default function Rides() {
   const toast = useToast()
+  const { user } = useAuth()
   const [tab, setTab] = useState('browse')
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState({ from: '', to: '' })
@@ -109,18 +111,28 @@ export default function Rides() {
             }
           >
             <div className="grid-wide">
-              {browse.data?.items?.map((ride) => (
-                <RideCard key={ride.ride_id} ride={ride}>
-                  <button
-                    type="button"
-                    className="btn btn-sm"
-                    disabled={!ride.seats_left}
-                    onClick={() => setClaiming(ride)}
-                  >
-                    {ride.seats_left ? 'Claim a seat' : 'Full'}
-                  </button>
-                </RideCard>
-              ))}
+              {browse.data?.items?.map((ride) => {
+                // The browse board is the whole estate's rides, your own
+                // included — filtering them out would hide a trip you are
+                // driving from the list you check to see what is running.
+                // So they stay, but the seat button does not: claim_seats
+                // refuses the driver with a 409, and finding that out after
+                // opening a modal and picking a seat count is not an answer
+                // anyone needed to work for.
+                const isDriver = ride.driver?.user_id === user?.user_id
+                return (
+                  <RideCard key={ride.ride_id} ride={ride}>
+                    <button
+                      type="button"
+                      className="btn btn-sm"
+                      disabled={isDriver || !ride.seats_left}
+                      onClick={() => setClaiming(ride)}
+                    >
+                      {isDriver ? 'You are driving' : ride.seats_left ? 'Claim a seat' : 'Full'}
+                    </button>
+                  </RideCard>
+                )
+              })}
             </div>
           </Results>
 
