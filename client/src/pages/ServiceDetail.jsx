@@ -80,7 +80,7 @@ export default function ServiceDetail() {
             <div className="empty">
               <h3>Sign in to see providers</h3>
               <p>Providers are listed per estate, so we need to know yours.</p>
-              <Link to="/login" className="btn btn-sm">
+              <Link to="/sign-in" className="btn btn-sm">
                 Sign in
               </Link>
             </div>
@@ -120,7 +120,7 @@ export default function ServiceDetail() {
           {!isAuthenticated ? (
             <>
               <p className="muted">You need an account to book.</p>
-              <Link to="/login" className="btn btn-block">
+              <Link to="/sign-in" className="btn btn-block">
                 Sign in to book
               </Link>
             </>
