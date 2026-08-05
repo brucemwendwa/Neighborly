@@ -1,11 +1,15 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { ToastProvider } from './context/ToastContext'
-import Layout from './components/Layout'
+import { RESIDENT_NAV, COMMUTE_SUBNAV, SECURITY_NAV, PLATFORM_NAV } from './config/nav'
+import PublicLayout from './components/PublicLayout'
+import AuthLayout from './components/AuthLayout'
+import WorkspaceShell from './components/WorkspaceShell'
 import ProtectedRoute from './components/ProtectedRoute'
 
-import Home from './pages/Home'
+import Landing from './pages/Landing'
+import Dashboard from './pages/Dashboard'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Services from './pages/Services'
@@ -21,19 +25,35 @@ import GateDesk from './pages/GateDesk'
 import Wallet from './pages/Wallet'
 import Notifications from './pages/Notifications'
 import Profile from './pages/Profile'
-import Admin from './pages/Admin'
 import NotFound from './pages/NotFound'
 
+import Overview from './pages/admin/Overview'
+import ProviderQueue from './pages/admin/ProviderQueue'
+import ListingQueue from './pages/admin/ListingQueue'
+import Catalogue from './pages/admin/Catalogue'
+import People from './pages/admin/People'
+import Estates from './pages/admin/Estates'
+
 /**
- * Route table for the whole app.
+ * Route table for the whole app, grouped into workspaces.
  *
- * Everything nested under the <Layout> route renders inside its <Outlet />,
- * so the header and footer are shared across pages.
+ * Each group is a layout route: everything nested under it renders inside that
+ * layout's <Outlet />, so a whole role shares one shell without any page
+ * having to know which shell it is in.
  *
- * Public routes are the shop window — the catalogue, housing and the sign-in
- * pages. Anything that reads or writes personal data is wrapped in
- * <ProtectedRoute>, which additionally takes `roles` where the screen is
- * only meaningful to some of them (the gate desk, the admin console).
+ *   public     the landing page — marketing header, no workspace nav
+ *   auth       sign in / sign up — split-screen brand panel
+ *   resident   the default workspace: services, housing, wallet, bookings
+ *   commute    the same shell plus commute sub-tabs
+ *   security   what a guard on the gate needs, and nothing else
+ *   admin      sidebar on desktop, scroll tabs on mobile
+ *
+ * Resident features keep clean root URLs; every other workspace namespaces
+ * itself (/commute, /security, /admin), so no two groups can resolve the same
+ * path. Browsing surfaces (services, housing, commute) are deliberately left
+ * unprotected — a visitor can look before joining, exactly as before. Anything
+ * that reads or writes personal data is wrapped in <ProtectedRoute>, which
+ * additionally takes `roles` where the screen only means something to some.
  */
 export default function App() {
   return (
@@ -42,18 +62,32 @@ export default function App() {
         <ToastProvider>
           <BrowserRouter>
             <Routes>
-              <Route path="/" element={<Layout />}>
-                <Route index element={<Home />} />
+              {/* --- Public ------------------------------------------------ */}
+              <Route element={<PublicLayout />}>
+                <Route index element={<Landing />} />
+              </Route>
 
-                {/* Public */}
-                <Route path="login" element={<Login />} />
-                <Route path="register" element={<Register />} />
+              {/* --- Auth -------------------------------------------------- */}
+              <Route element={<AuthLayout />}>
+                <Route path="sign-in" element={<Login />} />
+                <Route path="sign-up" element={<Register />} />
+              </Route>
+
+              {/* --- Resident workspace ------------------------------------ */}
+              <Route element={<WorkspaceShell nav={RESIDENT_NAV} />}>
+                <Route
+                  path="home"
+                  element={
+                    <ProtectedRoute>
+                      <Dashboard />
+                    </ProtectedRoute>
+                  }
+                />
                 <Route path="services" element={<Services />} />
                 <Route path="services/:serviceId" element={<ServiceDetail />} />
-                <Route path="listings" element={<Listings />} />
-                <Route path="listings/:listingId" element={<ListingDetail />} />
-
-                {/* Signed in */}
+                <Route path="find-and-move" element={<Listings />} />
+                <Route path="find-and-move/moving" element={<Moves />} />
+                <Route path="find-and-move/:listingId" element={<ListingDetail />} />
                 <Route
                   path="bookings"
                   element={
@@ -67,22 +101,6 @@ export default function App() {
                   element={
                     <ProtectedRoute>
                       <BookingDetail />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="moves"
-                  element={
-                    <ProtectedRoute>
-                      <Moves />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="rides"
-                  element={
-                    <ProtectedRoute>
-                      <Rides />
                     </ProtectedRoute>
                   }
                 />
@@ -118,10 +136,17 @@ export default function App() {
                     </ProtectedRoute>
                   }
                 />
+              </Route>
 
-                {/* Role-restricted */}
+              {/* --- Commute workspace ------------------------------------- */}
+              <Route element={<WorkspaceShell nav={RESIDENT_NAV} subnav={COMMUTE_SUBNAV} />}>
+                <Route path="commute" element={<Rides />} />
+              </Route>
+
+              {/* --- Security workspace ------------------------------------ */}
+              <Route element={<WorkspaceShell nav={SECURITY_NAV} title="Security" />}>
                 <Route
-                  path="gate"
+                  path="security/scan"
                   element={
                     <ProtectedRoute roles={['security', 'admin']}>
                       <GateDesk />
@@ -129,14 +154,55 @@ export default function App() {
                   }
                 />
                 <Route
-                  path="admin"
+                  path="security/profile"
                   element={
-                    <ProtectedRoute roles={['admin']}>
-                      <Admin />
+                    <ProtectedRoute roles={['security', 'admin']}>
+                      <Profile />
                     </ProtectedRoute>
                   }
                 />
+              </Route>
 
+              {/* --- Platform admin workspace ------------------------------ */}
+              <Route
+                element={<WorkspaceShell nav={PLATFORM_NAV} layout="admin" title="Admin" />}
+              >
+                {[
+                  ['overview', Overview],
+                  ['estates', Estates],
+                  ['users', People],
+                  ['providers', ProviderQueue],
+                  ['listings', ListingQueue],
+                  ['services', Catalogue],
+                ].map(([slug, Page]) => (
+                  <Route
+                    key={slug}
+                    path={`admin/${slug}`}
+                    element={
+                      <ProtectedRoute roles={['admin']}>
+                        <Page />
+                      </ProtectedRoute>
+                    }
+                  />
+                ))}
+              </Route>
+
+              {/* --- Redirects from the pre-workspace URLs ------------------
+                  The README and WALKTHROUGH still cite these, and anyone with a
+                  bookmark should land somewhere useful rather than on a 404. */}
+              <Route path="login" element={<Navigate to="/sign-in" replace />} />
+              <Route path="register" element={<Navigate to="/sign-up" replace />} />
+              <Route path="listings" element={<Navigate to="/find-and-move" replace />} />
+              <Route
+                path="listings/:listingId"
+                element={<Navigate to="/find-and-move" replace />}
+              />
+              <Route path="moves" element={<Navigate to="/find-and-move/moving" replace />} />
+              <Route path="rides" element={<Navigate to="/commute" replace />} />
+              <Route path="gate" element={<Navigate to="/security/scan" replace />} />
+              <Route path="admin" element={<Navigate to="/admin/overview" replace />} />
+
+              <Route element={<PublicLayout />}>
                 <Route path="*" element={<NotFound />} />
               </Route>
             </Routes>
