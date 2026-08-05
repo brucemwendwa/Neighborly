@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { users } from '../../api'
 import { useApi, useAction } from '../../hooks/useApi'
 import { useToast } from '../../context/ToastContext'
-import { Avatar, Empty, Field, Results } from '../../components/ui'
+import { Avatar, Empty, Field, PageHeader, Results } from '../../components/ui'
 import { date } from '../../utils/format'
 
 /** The user directory, and the only place a role can be changed. */
@@ -24,6 +24,10 @@ export default function People() {
 
   return (
     <>
+      <PageHeader
+        title="Users"
+        description="Everyone with an account, filterable by role and estate."
+      />
       <div className="filters">
         <Field
           label="Search"
