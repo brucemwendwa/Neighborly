@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { estates } from '../../api'
 import { useApi, useAction } from '../../hooks/useApi'
 import { useToast } from '../../context/ToastContext'
-import { Empty, Field, Modal, Results } from '../../components/ui'
+import { Empty, Field, Modal, PageHeader, Results } from '../../components/ui'
 
 /** The communities every other record is scoped to. */
 export default function Estates() {
@@ -12,12 +12,14 @@ export default function Estates() {
 
   return (
     <>
-      <div className="row-between" style={{ marginBottom: '1rem' }}>
-        <h2>Estates</h2>
+      <PageHeader
+        title="Estates"
+        description="The communities on the platform and who administers them."
+      >
         <button type="button" className="btn" onClick={() => setCreating(true)}>
           Add estate
         </button>
-      </div>
+      </PageHeader>
 
       <Results
         loading={loading}
