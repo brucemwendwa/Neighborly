@@ -270,6 +270,65 @@ small,
   margin-left: auto;
 }
 
+/* --- 1b. Brand mark ------------------------------------------------------- */
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.logo-mark {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  flex: none;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, hsl(84 31% 47%) 0%, hsl(40 18% 15%) 100%);
+  color: hsl(45 50% 97%);
+  box-shadow: var(--shadow-glow);
+}
+.logo-mark svg {
+  width: 1rem;
+  height: 1rem;
+}
+/* The gold pip is the one flash of the accent in the mark. Its ring matches
+   whatever it sits on so it reads as a cut-out rather than a sticker. */
+.logo-pip {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: var(--radius-pill);
+  background: hsl(var(--gold));
+  box-shadow: 0 0 0 2px hsl(var(--background));
+}
+.logo-word {
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--text-strong);
+}
+.logo-word span {
+  color: hsl(var(--primary));
+}
+/* Over the hero photograph or a dark band the olive drops below 3:1. */
+.logo-light .logo-mark {
+  box-shadow: var(--shadow-soft), 0 0 0 1px rgba(255, 255, 255, 0.25);
+}
+.logo-light .logo-pip {
+  box-shadow: 0 0 0 2px rgba(27, 25, 21, 0.6);
+}
+.logo-light .logo-word {
+  color: hsl(45 50% 97%);
+}
+.logo-light .logo-word span {
+  color: hsl(84 40% 72%);
+}
+
 /* --- 2. Shell ------------------------------------------------------------- */
 .app {
   min-height: 100svh;
@@ -1136,4 +1195,295 @@ tbody tr:last-child td {
   background: var(--accent-soft);
   color: var(--accent);
   font-weight: 600;
+}
+
+/* --- 13. Workspace shell -------------------------------------------------- */
+/* One shell serves every role. `app` gives a desktop sidebar plus a mobile
+   bottom nav; `admin` swaps the bottom nav for horizontal scroll tabs, which
+   fit ten-plus destinations where a bottom nav caps out at about six. */
+.ws {
+  min-height: 100svh;
+  background: var(--bg);
+}
+
+.ws-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  border-bottom: 1px solid hsl(var(--border));
+  background: hsl(var(--background) / 0.85);
+  backdrop-filter: blur(16px);
+}
+.ws-topbar-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  height: 4rem;
+  width: min(1280px, 100%);
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+.ws-brand {
+  display: inline-flex;
+  flex: none;
+}
+.ws-title {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--text-mute);
+}
+/* The estate a signed-in member is acting inside. Hidden on phones — the
+   brand and the account actions have first claim on that row. */
+.ws-estate {
+  display: none;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0 auto;
+  padding: 0.4rem 0.85rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-pill);
+  background: hsl(var(--secondary) / 0.6);
+  font-size: 0.88rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+@media (min-width: 640px) {
+  .ws-estate {
+    display: inline-flex;
+  }
+}
+.ws-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.ws-body {
+  display: flex;
+  width: min(1280px, 100%);
+  margin: 0 auto;
+}
+
+.ws-sidebar {
+  display: none;
+  flex-direction: column;
+  gap: 0.25rem;
+  width: 15rem;
+  flex: none;
+  padding: 1rem;
+  border-right: 1px solid hsl(var(--border));
+}
+.ws-admin .ws-sidebar {
+  width: 16rem;
+}
+.ws-sidebar a {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: var(--radius-xl);
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-mute);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.ws-sidebar a:hover {
+  background: hsl(var(--secondary));
+  color: var(--text-strong);
+}
+.ws-sidebar a.active {
+  background: hsl(var(--primary) / 0.1);
+  color: hsl(var(--primary));
+}
+@media (min-width: 768px) {
+  .ws-sidebar {
+    display: flex;
+  }
+}
+
+.ws-main {
+  flex: 1;
+  min-width: 0;
+  padding: 1.5rem 1rem 6rem;
+}
+@media (min-width: 768px) {
+  .ws-main {
+    padding: 1.5rem 1.5rem 2.5rem;
+  }
+}
+.ws-admin .ws-main {
+  padding-bottom: 2.5rem;
+}
+
+/* Secondary tabs above the page — the commute area's own sections. */
+.ws-subnav {
+  display: flex;
+  gap: 0.25rem;
+  margin: -0.25rem -1rem 1.5rem;
+  padding: 0 1rem;
+  border-bottom: 1px solid hsl(var(--border));
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.ws-subnav::-webkit-scrollbar,
+.ws-scrolltabs::-webkit-scrollbar {
+  display: none;
+}
+.ws-subnav a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex: none;
+  padding: 0.65rem 0.75rem;
+  border-bottom: 2px solid transparent;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--text-mute);
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.ws-subnav a:hover {
+  color: var(--text-strong);
+}
+.ws-subnav a.active {
+  border-bottom-color: hsl(var(--primary));
+  color: hsl(var(--primary));
+}
+
+/* Admin on a phone: the sidebar's destinations as scrolling tabs. */
+.ws-scrolltabs {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0 0.75rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.ws-scrolltabs a {
+  flex: none;
+  padding: 0.6rem 0.75rem;
+  border-bottom: 2px solid transparent;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--text-mute);
+  white-space: nowrap;
+}
+.ws-scrolltabs a.active {
+  border-bottom-color: hsl(var(--primary));
+  color: hsl(var(--primary));
+}
+@media (min-width: 768px) {
+  .ws-scrolltabs {
+    display: none;
+  }
+}
+
+/* Mobile bottom nav. 44px targets, and the labels stay — an icon alone is a
+   guessing game for anyone using the app for the first time. */
+.ws-bottomnav {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 40;
+  display: grid;
+  grid-template-columns: repeat(var(--nav-count, 5), 1fr);
+  width: min(32rem, 100%);
+  margin: 0 auto;
+  border-top: 1px solid hsl(var(--border));
+  background: hsl(var(--background) / 0.9);
+  backdrop-filter: blur(16px);
+  padding-bottom: max(env(safe-area-inset-bottom), 0px);
+}
+.ws-bottomnav a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.4rem 0.25rem 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--text-mute);
+  text-align: center;
+}
+.ws-bottomnav a.active {
+  color: hsl(var(--primary));
+}
+.ws-bottomnav-icon {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-md);
+  transition: background 0.15s ease;
+}
+.ws-bottomnav a.active .ws-bottomnav-icon {
+  background: hsl(var(--primary) / 0.1);
+}
+@media (min-width: 768px) {
+  .ws-bottomnav {
+    display: none;
+  }
+}
+
+/* --- 14. Auth split screen ------------------------------------------------ */
+.auth-split {
+  min-height: 100svh;
+  display: grid;
+  grid-template-columns: 1fr;
+}
+.auth-brand {
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 2.5rem;
+  padding: 2.5rem;
+}
+.auth-brand p {
+  max-width: 34ch;
+  opacity: 0.85;
+}
+.auth-points {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.9rem;
+  opacity: 0.85;
+}
+.auth-points li::before {
+  content: '✓';
+  margin-right: 0.5rem;
+  color: hsl(84 40% 72%);
+  font-weight: 700;
+}
+.auth-form-side {
+  display: grid;
+  place-items: center;
+  padding: 2.5rem 1.25rem;
+}
+/* Below 900px the brand panel is dropped rather than stacked — stacking would
+   push the form itself below the fold, which is the one thing this screen is
+   for. */
+@media (min-width: 900px) {
+  .auth-split {
+    grid-template-columns: 1fr 1fr;
+  }
+  .auth-brand {
+    display: flex;
+  }
+}
+
+/* Reassurance strip under the landing hero. */
+.trust-row {
+  margin-top: 1.5rem;
+  font-size: 0.85rem;
+  color: var(--text-mute);
+  gap: 1.25rem;
+}
+.trust-row span::before {
+  content: '✓';
+  margin-right: 0.4rem;
+  color: hsl(var(--primary));
+  font-weight: 700;
 }
