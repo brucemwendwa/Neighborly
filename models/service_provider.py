@@ -26,6 +26,9 @@ class ServiceProvider(TimestampMixin, db.Model):
 
     user = db.relationship("User", back_populates="provider_profile")
     jobs = db.relationship("Booking", back_populates="provider")
+    quotes = db.relationship(
+        "JobQuote", back_populates="provider", cascade="all, delete-orphan"
+    )
 
     def __repr__(self):
         return f"<ServiceProvider {self.provider_id} approved={self.is_approved}>"
