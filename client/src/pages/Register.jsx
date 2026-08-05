@@ -40,7 +40,7 @@ export default function Register() {
     setError(null)
     try {
       await register(form)
-      navigate('/', { replace: true })
+      navigate('/home', { replace: true })
     } catch (err) {
       setError(err.message)
     }
@@ -147,7 +147,7 @@ export default function Register() {
 
         <p className="muted small" style={{ marginTop: '1.25rem' }}>
           Already have an account?{' '}
-          <Link to="/login" className="btn-link">
+          <Link to="/sign-in" className="btn-link">
             Sign in
           </Link>
         </p>
