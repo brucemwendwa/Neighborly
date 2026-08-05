@@ -1,62 +1,99 @@
-import axios from 'axios'
+/**
+ * One configured fetch wrapper for the whole app.
+ *
+ * Import this — never call fetch directly from a component. That way the base
+ * URL, the auth header and error handling are defined in exactly one place,
+ * and changing them later is a one-file change.
+ *
+ * Each method resolves to the parsed response *body*, so callers never touch
+ * Response objects or repeat `res.json()`.
+ */
+const BASE_URL = import.meta.env.VITE_API_URL || '/api'
+
+/** Build the query string, skipping anything left undefined or blank. */
+function withQuery(path, params) {
+  if (!params) return path
+  const search = new URLSearchParams()
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== null && value !== '') {
+      search.append(key, value)
+    }
+  }
+  const query = search.toString()
+  return query ? `${path}?${query}` : path
+}
 
 /**
- * One configured axios instance for the whole app.
+ * Turn a failed response into an Error a component can just read `.message`
+ * from.
  *
- * Import this — never call axios directly from a component. That way the
- * base URL, the auth header and error handling are defined in exactly one
- * place, and changing them later is a one-file change.
+ * Marshmallow answers a failed validation as
+ *   {"error": "Validation failed", "details": {"email": ["..."]}}
+ * Flattening the first field message makes the common case readable, while
+ * `err.details` stays available for per-field display.
  */
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api',
-  headers: { 'Content-Type': 'application/json' },
-})
-
-// Attach the JWT (if we have one) to every outgoing request.
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token')
-  if (token) config.headers.Authorization = `Bearer ${token}`
-  return config
-})
-
-// Normalise errors so components can just read `err.message`,
-// and bounce the user out on an expired session.
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    const status = error.response?.status
-    const data = error.response?.data
-
-    // 401 means the token is missing, expired or belongs to a deleted
-    // account — there is nothing a retry can fix, so drop it and start over.
-    // The login page is excluded: a wrong password there must show an error,
-    // not reload the page underneath the form.
-    if (status === 401 && window.location.pathname !== '/sign-in') {
-      localStorage.removeItem('token')
-      localStorage.removeItem('refresh_token')
-      localStorage.removeItem('user')
-      window.location.href = '/sign-in'
+function toError(status, data, fallback) {
+  let message = data?.error || fallback || 'Something went wrong'
+  if (data?.details && typeof data.details === 'object') {
+    const first = Object.entries(data.details)[0]
+    if (first) {
+      const [field, messages] = first
+      const text = Array.isArray(messages) ? messages[0] : String(messages)
+      message = field === '_schema' ? text : `${field}: ${text}`
     }
-
-    // Marshmallow answers a failed validation as
-    //   {"error": "Validation failed", "details": {"email": ["..."]}}
-    // Flattening the first field message makes the common case readable,
-    // while `err.details` stays available for per-field display.
-    let message = data?.error || error.message || 'Something went wrong'
-    if (data?.details && typeof data.details === 'object') {
-      const first = Object.entries(data.details)[0]
-      if (first) {
-        const [field, messages] = first
-        const text = Array.isArray(messages) ? messages[0] : String(messages)
-        message = field === '_schema' ? text : `${field}: ${text}`
-      }
-    }
-
-    const normalised = new Error(message)
-    normalised.status = status
-    normalised.details = data?.details
-    return Promise.reject(normalised)
   }
-)
+  const error = new Error(message)
+  error.status = status
+  error.details = data?.details
+  return error
+}
+
+async function request(method, path, { params, body } = {}) {
+  const headers = { 'Content-Type': 'application/json' }
+
+  // Attach the JWT (if we have one) to every outgoing request.
+  const token = localStorage.getItem('token')
+  if (token) headers.Authorization = `Bearer ${token}`
+
+  let response
+  try {
+    response = await fetch(BASE_URL + withQuery(path, params), {
+      method,
+      headers,
+      body: body === undefined ? undefined : JSON.stringify(body),
+    })
+  } catch {
+    // fetch only rejects when the request never completed — no server, DNS
+    // failure, the machine is offline. A 500 is a resolved promise.
+    throw new Error('Cannot reach the server. Check your connection.')
+  }
+
+  // 204 and friends have no body to parse.
+  const text = await response.text()
+  const data = text ? JSON.parse(text) : null
+
+  if (response.ok) return data
+
+  // 401 means the token is missing, expired or belongs to a deleted account —
+  // there is nothing a retry can fix, so drop it and start over. The sign-in
+  // page is excluded: a wrong password there must show an error, not reload
+  // the page underneath the form.
+  if (response.status === 401 && window.location.pathname !== '/sign-in') {
+    localStorage.removeItem('token')
+    localStorage.removeItem('refresh_token')
+    localStorage.removeItem('user')
+    window.location.href = '/sign-in'
+  }
+
+  throw toError(response.status, data, response.statusText)
+}
+
+const api = {
+  get: (path, params) => request('GET', path, { params }),
+  post: (path, body) => request('POST', path, { body }),
+  patch: (path, body) => request('PATCH', path, { body }),
+  put: (path, body) => request('PUT', path, { body }),
+  delete: (path) => request('DELETE', path),
+}
 
 export default api
