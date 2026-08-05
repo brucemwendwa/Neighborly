@@ -44,7 +44,6 @@ from schemas import (
 )
 from controllers.utils import (
     body,
-    delete,
     get_or_404,
     is_admin,
     notify,
@@ -298,11 +297,11 @@ def create_quote(request_id):
     if service_request.status == "open":
         service_request.status = "quoting"
 
-    record("quoted", request=service_request, note=f"{profile.business_name} quoted")
+    record("quoted", request=service_request, note=f"{profile.user.full_name} quoted")
     notify(
         service_request.resident_id,
         "New quote received",
-        f"{profile.business_name} quoted KES {data['amount']} for "
+        f"{profile.user.full_name} quoted KES {data['amount']} for "
         f"“{service_request.title}”.",
         type="booking",
     )
@@ -361,12 +360,14 @@ def accept_quote(request_id, quote_id):
     # always needs a concrete service — fall back to the provider's own.
     service_id = service_request.service_id
     if not service_id:
-        offered = quote.provider.services
-        if not offered:
+        service = db.session.scalar(
+            select(Service).where(Service.category_id == service_request.category_id)
+        )
+        if service is None:
             return jsonify(
-                error="That provider has no service to book this against."
+                error="That category has no service to book this against."
             ), 409
-        service_id = offered[0].service_id
+        service_id = service.service_id
 
     booking = Booking(
         user_id=service_request.resident_id,
@@ -398,7 +399,7 @@ def accept_quote(request_id, quote_id):
         "accepted",
         request=service_request,
         booking=booking,
-        note=f"{quote.provider.business_name} accepted at KES {quote.amount}",
+        note=f"{quote.provider.user.full_name} accepted at KES {quote.amount}",
     )
 
     notify(
