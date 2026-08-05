@@ -27,10 +27,14 @@ HOW THE ERD MAPS ONTO THESE CLASSES
       │                 GatePass, Notification,
       │                 Review (as reviewer AND as reviewee)
       │
+      ├──∞ ServiceRequest 1──∞ JobQuote ∞──1 ServiceProvider
+      │            └──1 Booking          (created when a quote is accepted)
+      │
       ├──∞ Booking ──1 Service ──1 ServiceCategory
       │       │      └──1 ServiceProvider
       │       ├──∞ Payment
       │       ├──∞ GatePass
+      │       ├──∞ JobStatusEvent        (append-only history)
       │       └──∞ Review
       │
       ├──∞ HouseListing
@@ -56,6 +60,8 @@ from models.commute_ride import RECURRENCE, RIDE_STATUSES, CommuteRide
 from models.estate import Estate
 from models.gate_pass import GATE_PASS_STATUSES, GatePass
 from models.house_listing import LISTING_STATUSES, HouseListing
+from models.job_quote import QUOTE_STATUSES, JobQuote
+from models.job_status_event import JOB_EVENT_TYPES, JobStatusEvent
 from models.move_request import MOVE_SERVICE_TYPES, MOVE_STATUSES, MoveRequest
 from models.notification import Notification
 from models.payment import PAYMENT_METHODS, PAYMENT_STATUSES, Payment
@@ -63,6 +69,7 @@ from models.review import Review
 from models.ride_booking import RIDE_BOOKING_STATUSES, RideBooking
 from models.service import Service
 from models.service_category import ServiceCategory
+from models.service_request import REQUEST_KINDS, REQUEST_STATUSES, ServiceRequest
 from models.service_provider import ServiceProvider
 from models.user import USER_ROLES, User
 from models.user_wallet import UserWallet
@@ -76,6 +83,9 @@ __all__ = [
     "ServiceCategory",
     "Service",
     "Booking",
+    "ServiceRequest",
+    "JobQuote",
+    "JobStatusEvent",
     "Payment",
     "HouseListing",
     "MoveRequest",
@@ -88,6 +98,10 @@ __all__ = [
     "USER_ROLES",
     "BOOKING_TYPES",
     "BOOKING_STATUSES",
+    "REQUEST_KINDS",
+    "REQUEST_STATUSES",
+    "QUOTE_STATUSES",
+    "JOB_EVENT_TYPES",
     "PAYMENT_STATUSES",
     "PAYMENT_METHODS",
     "LISTING_STATUSES",
