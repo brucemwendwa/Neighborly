@@ -12,34 +12,90 @@
    ========================================================================== */
 
 /* --- 1. Tokens ------------------------------------------------------------ */
+/* Palette sampled from the golden-hour estate photograph that anchors the
+   brand: cream stucco, hedge olive, sunset gold, warm charcoal. Colours are
+   stored as bare HSL channels rather than finished colours, so any rule can
+   mix its own alpha with hsl(var(--primary) / 0.12) instead of the palette
+   having to ship a second "-soft" token for every shade. */
 :root {
-  --bg: #ffffff;
-  --surface: #f7f8fa;
-  --surface-2: #eef1f4;
-  --text: #4a5260;
-  --text-strong: #0d1117;
-  --text-mute: #79808d;
-  --border: #e3e6ea;
-  --accent: #1f8a5f;
-  --accent-hover: #17694a;
-  --accent-soft: rgba(31, 138, 95, 0.1);
-  --danger: #c0392b;
-  --danger-soft: rgba(192, 57, 43, 0.1);
-  --warn: #b7791f;
-  --warn-soft: rgba(183, 121, 31, 0.12);
-  --info: #2b6cb0;
-  --info-soft: rgba(43, 108, 176, 0.12);
-  --shadow: 0 1px 2px rgba(13, 17, 23, 0.04), 0 8px 24px rgba(13, 17, 23, 0.06);
-  --radius: 10px;
-  --radius-lg: 16px;
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
+  /* Canvas — warm bone, never pure white */
+  --background: 40 65% 96%;
+  --foreground: 40 17% 10%;
+  --card: 43 100% 99%;
+
+  /* Hedge olive — primary, trust, every default action */
+  --primary: 82 31% 33%;
+  --primary-foreground: 45 50% 97%;
+  --primary-deep: 86 31% 23%;
+  --primary-tint: 76 38% 86%;
+
+  /* Sand — secondary surfaces, chips, table headers */
+  --secondary: 40 55% 89%;
+  --secondary-foreground: 40 15% 16%;
+  --muted: 40 45% 92%;
+  --muted-foreground: 38 11% 38%;
+
+  /* Sunset gold — premium accents only. A spice, never a fill. */
+  --gold: 39 62% 49%;
+  --gold-foreground: 39 62% 10%;
+
+  /* Status */
+  --destructive: 4 53% 50%;
+  --success: 138 37% 39%;
+  --warning: 25 75% 47%;
+  --info: 201 38% 42%;
+
+  --border: 41 37% 85%;
+  --ring: 82 31% 33%;
+
+  /* Radius ladder keyed off one base, mirroring the source's sm→2xl scale. */
+  --radius-base: 0.9rem;
+  --radius-sm: calc(var(--radius-base) - 8px);
+  --radius-md: calc(var(--radius-base) - 4px);
+  --radius-xl: calc(var(--radius-base) + 4px);
+  --radius-2xl: calc(var(--radius-base) + 10px);
+  --radius-pill: 999px;
+
+  /* Elevation ladder: soft (resting) → lift (hover) → glow (olive emphasis). */
+  --shadow-soft: 0 1px 2px rgba(31, 28, 22, 0.05), 0 8px 24px -12px rgba(31, 28, 22, 0.2);
+  --shadow-lift: 0 2px 4px rgba(31, 28, 22, 0.07), 0 24px 48px -20px rgba(31, 28, 22, 0.3);
+  --shadow-glow: 0 0 0 1px rgba(102, 123, 65, 0.2), 0 8px 40px -8px rgba(102, 123, 65, 0.38);
+  --shadow-gold: 0 0 0 1px rgba(201, 146, 47, 0.22), 0 8px 40px -8px rgba(201, 146, 47, 0.35);
+
+  /* Inter for text, Sora for headings and any number you want read as money. */
+  --sans: 'Inter Variable', Inter, system-ui, 'Segoe UI', Roboto, sans-serif;
+  --display: 'Sora Variable', Sora, var(--sans);
   --mono: ui-monospace, 'SF Mono', Consolas, monospace;
+
+  /* --- Aliases -----------------------------------------------------------
+     The rules below this block, and every page component, were written
+     against the older flat names. Pointing them at the palette above
+     re-skins the whole product without touching a single call site. */
+  --bg: hsl(var(--background));
+  --surface: hsl(var(--card));
+  --surface-2: hsl(var(--secondary));
+  --text: hsl(var(--foreground));
+  --text-strong: hsl(var(--foreground));
+  --text-mute: hsl(var(--muted-foreground));
+  --accent: hsl(var(--primary));
+  --accent-hover: hsl(var(--primary-deep));
+  --accent-soft: hsl(var(--primary) / 0.12);
+  --danger: hsl(var(--destructive));
+  --danger-soft: hsl(var(--destructive) / 0.12);
+  --warn: hsl(var(--warning));
+  --warn-soft: hsl(var(--warning) / 0.14);
+  --info-soft: hsl(var(--info) / 0.14);
+  --shadow: var(--shadow-soft);
+  --radius: var(--radius-xl);
+  --radius-lg: var(--radius-2xl);
 
   font: 16px/1.5 var(--sans);
   color-scheme: light dark;
   color: var(--text);
   background: var(--bg);
   -webkit-font-smoothing: antialiased;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  text-rendering: optimizeLegibility;
 }
 
 /* The dark palette applies in two situations, and the rules are identical
@@ -53,44 +109,68 @@
    The :not() is what lets an explicit "light" beat a dark OS setting. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
-    --bg: #12151a;
-    --surface: #1a1f26;
-    --surface-2: #232932;
-    --text: #9aa4b2;
-    --text-strong: #f0f3f6;
-    --text-mute: #78828f;
-    --border: #2a3038;
-    --accent: #3fbf87;
-    --accent-hover: #52d199;
-    --accent-soft: rgba(63, 191, 135, 0.14);
-    --danger: #ef6b5e;
-    --danger-soft: rgba(239, 107, 94, 0.14);
-    --warn: #e0b357;
-    --warn-soft: rgba(224, 179, 87, 0.14);
-    --info: #6aa9e9;
-    --info-soft: rgba(106, 169, 233, 0.14);
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.3);
+    --background: 40 17% 7%;
+    --foreground: 40 47% 93%;
+    --card: 40 18% 10%;
+
+    --primary: 79 31% 58%;
+    --primary-foreground: 40 17% 7%;
+    --primary-deep: 83 26% 45%;
+    --primary-tint: 82 23% 16%;
+
+    --secondary: 40 17% 14%;
+    --secondary-foreground: 40 47% 93%;
+    --muted: 40 15% 15%;
+    --muted-foreground: 42 12% 62%;
+
+    --gold: 39 71% 63%;
+    --gold-foreground: 40 40% 8%;
+
+    --destructive: 5 60% 56%;
+    --success: 134 30% 50%;
+    --warning: 28 78% 56%;
+    --info: 201 40% 58%;
+
+    --border: 40 15% 16%;
+    --ring: 79 31% 58%;
+
+    /* On a near-black canvas the warm shadows vanish; deepen them so the
+       elevation ladder still reads. */
+    --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
+    --shadow-lift: 0 2px 4px rgba(0, 0, 0, 0.45), 0 24px 48px -20px rgba(0, 0, 0, 0.7);
   }
 }
 
 :root[data-theme='dark'] {
-  --bg: #12151a;
-  --surface: #1a1f26;
-  --surface-2: #232932;
-  --text: #9aa4b2;
-  --text-strong: #f0f3f6;
-  --text-mute: #78828f;
-  --border: #2a3038;
-  --accent: #3fbf87;
-  --accent-hover: #52d199;
-  --accent-soft: rgba(63, 191, 135, 0.14);
-  --danger: #ef6b5e;
-  --danger-soft: rgba(239, 107, 94, 0.14);
-  --warn: #e0b357;
-  --warn-soft: rgba(224, 179, 87, 0.14);
-  --info: #6aa9e9;
-  --info-soft: rgba(106, 169, 233, 0.14);
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.3);
+  --background: 40 17% 7%;
+  --foreground: 40 47% 93%;
+  --card: 40 18% 10%;
+
+  --primary: 79 31% 58%;
+  --primary-foreground: 40 17% 7%;
+  --primary-deep: 83 26% 45%;
+  --primary-tint: 82 23% 16%;
+
+  --secondary: 40 17% 14%;
+  --secondary-foreground: 40 47% 93%;
+  --muted: 40 15% 15%;
+  --muted-foreground: 42 12% 62%;
+
+  --gold: 39 71% 63%;
+  --gold-foreground: 40 40% 8%;
+
+  --destructive: 5 60% 56%;
+  --success: 134 30% 50%;
+  --warning: 28 78% 56%;
+  --info: 201 40% 58%;
+
+  --border: 40 15% 16%;
+  --ring: 79 31% 58%;
+
+  /* On a near-black canvas the warm shadows vanish; deepen them so the
+     elevation ladder still reads. */
+  --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
+  --shadow-lift: 0 2px 4px rgba(0, 0, 0, 0.45), 0 24px 48px -20px rgba(0, 0, 0, 0.7);
 }
 
 /* Pin the *native* widgets too — scrollbars, select dropdowns, date pickers.
@@ -110,11 +190,16 @@ body {
   margin: 0;
 }
 
+/* Sora carries every heading and every number meant to read as money. Keeping
+   it off body copy is deliberate — Inter is the more legible of the two at
+   14px, which is most of the interface. */
 h1,
 h2,
 h3,
 h4 {
   color: var(--text-strong);
+  font-family: var(--display);
+  font-weight: 700;
   line-height: 1.2;
   margin: 0 0 0.5rem;
 }
@@ -122,6 +207,7 @@ h4 {
 h1 {
   font-size: clamp(1.7rem, 3.5vw, 2.4rem);
   letter-spacing: -0.02em;
+  text-wrap: balance;
 }
 h2 {
   font-size: 1.3rem;
@@ -199,7 +285,7 @@ small,
   align-items: center;
   gap: 1.25rem;
   padding: 0.85rem 1.5rem;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid hsl(var(--border));
   background: color-mix(in srgb, var(--bg) 88%, transparent);
   backdrop-filter: blur(8px);
 }
@@ -249,7 +335,7 @@ small,
   height: 2.1rem;
   padding: 0;
   flex: none;
-  border: 1px solid var(--border);
+  border: 1px solid hsl(var(--border));
   border-radius: 999px;
   background: transparent;
   color: var(--text);
@@ -271,7 +357,7 @@ small,
 }
 
 .app-footer {
-  border-top: 1px solid var(--border);
+  border-top: 1px solid hsl(var(--border));
   padding: 1.25rem 1.5rem;
   font-size: 0.85rem;
   color: var(--text-mute);
@@ -290,34 +376,64 @@ small,
 }
 
 /* --- 3. Buttons ----------------------------------------------------------- */
+/* Pill radius, 44px minimum height, and a press that scales rather than
+   darkens — the touch feedback the source uses so the control still reads as
+   pressed on a low-end phone that drops the hover state entirely. */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
-  padding: 0.55rem 1.05rem;
+  min-height: 2.75rem;
+  padding: 0.55rem 1.25rem;
   border: 1px solid transparent;
-  border-radius: var(--radius);
-  background: var(--accent);
-  color: #fff;
+  border-radius: var(--radius-pill);
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
   font: inherit;
   font-size: 0.92rem;
-  font-weight: 500;
+  font-weight: 600;
   line-height: 1.3;
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  box-shadow: var(--shadow-soft);
+  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.2s ease,
+    transform 0.1s ease;
 }
 .btn:hover:not(:disabled) {
-  background: var(--accent-hover);
+  background: hsl(var(--primary-deep));
+  box-shadow: var(--shadow-glow);
+}
+.btn:active:not(:disabled) {
+  transform: scale(0.98);
 }
 .btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Gold is the premium CTA — top up, become a provider. Never a large fill. */
+.btn-gold {
+  background: hsl(var(--gold));
+  color: hsl(var(--gold-foreground));
+}
+.btn-gold:hover:not(:disabled) {
+  background: hsl(var(--gold) / 0.88);
+  box-shadow: var(--shadow-gold);
+}
+
+/* Warm charcoal — secondary emphasis where an olive button would compete. */
+.btn-bark {
+  background: hsl(var(--foreground));
+  color: hsl(var(--background));
+}
+.btn-bark:hover:not(:disabled) {
+  background: hsl(var(--foreground) / 0.85);
 }
 
 .btn-ghost {
   background: transparent;
-  border-color: var(--border);
+  border-color: hsl(var(--border));
   color: var(--text);
 }
 .btn-ghost:hover:not(:disabled) {
@@ -327,7 +443,7 @@ small,
 
 .btn-danger {
   background: transparent;
-  border-color: var(--border);
+  border-color: hsl(var(--border));
   color: var(--danger);
 }
 .btn-danger:hover:not(:disabled) {
@@ -335,7 +451,8 @@ small,
 }
 
 .btn-sm {
-  padding: 0.35rem 0.7rem;
+  min-height: 2.25rem;
+  padding: 0.35rem 0.85rem;
   font-size: 0.84rem;
 }
 .btn-block {
@@ -345,6 +462,8 @@ small,
   background: none;
   border: none;
   padding: 0;
+  min-height: 0;
+  box-shadow: none;
   color: var(--accent);
   font: inherit;
   font-size: 0.88rem;
@@ -355,9 +474,11 @@ small,
 /* --- 4. Cards and surfaces ------------------------------------------------ */
 .card {
   padding: 1.25rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-2xl);
   background: var(--surface);
+  box-shadow: var(--shadow-soft);
+  transition: box-shadow 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
 }
 .card h2,
 .card h3 {
@@ -371,15 +492,15 @@ small,
 
 .card-link {
   display: block;
-  transition: border-color 0.15s ease, transform 0.15s ease;
 }
 .card-link:hover {
-  border-color: var(--accent);
+  border-color: hsl(var(--primary) / 0.45);
+  box-shadow: var(--shadow-lift);
   transform: translateY(-2px);
 }
 
 .panel {
-  border: 1px solid var(--border);
+  border: 1px solid hsl(var(--border));
   border-radius: var(--radius-lg);
   background: var(--bg);
   padding: 1.5rem;
@@ -436,12 +557,38 @@ small,
 }
 
 .hero-banner {
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-2xl);
   padding: 3rem 2rem;
   background: linear-gradient(140deg, var(--accent-soft), transparent 70%),
     var(--surface);
-  border: 1px solid var(--border);
+  border: 1px solid hsl(var(--border));
+  box-shadow: var(--shadow-soft);
   margin-bottom: 2rem;
+}
+
+/* Brand gradients, lifted from the source's component layer. `dusk` is the
+   warm-charcoal band used for dark sections, the wallet card and the footer
+   CTA; `olive` is the primary wash; `sunset` is the gold accent fill. Any
+   element carrying one of these owns its own text colour. */
+.gradient-dusk {
+  background: radial-gradient(120% 120% at 10% 0%, #2b2620 0%, #1b1915 55%, #100f0c 100%);
+  color: hsl(45 50% 97%);
+}
+.gradient-olive {
+  background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary-deep)) 100%);
+  color: hsl(var(--primary-foreground));
+}
+.gradient-sunset {
+  background: linear-gradient(135deg, #e0a94a 0%, #c9922f 55%, #a4552f 100%);
+  color: hsl(39 62% 10%);
+}
+.gradient-dusk h1,
+.gradient-dusk h2,
+.gradient-dusk h3,
+.gradient-olive h1,
+.gradient-olive h2,
+.gradient-olive h3 {
+  color: inherit;
 }
 
 .pillars {
@@ -488,7 +635,7 @@ small,
 }
 .badge-info {
   background: var(--info-soft);
-  color: var(--info);
+  color: hsl(var(--info));
 }
 
 .user-chip {
@@ -500,7 +647,7 @@ small,
   border-radius: 999px;
   background: var(--surface);
   color: var(--text-strong);
-  border: 1px solid var(--border);
+  border: 1px solid hsl(var(--border));
 }
 
 .avatar {
@@ -561,7 +708,7 @@ small,
   letter-spacing: 0.05em;
 }
 .stars .off {
-  color: var(--border);
+  color: hsl(var(--border));
 }
 .star-button {
   background: none;
@@ -570,7 +717,7 @@ small,
   font-size: 1.6rem;
   line-height: 1;
   cursor: pointer;
-  color: var(--border);
+  color: hsl(var(--border));
 }
 .star-button.on {
   color: var(--warn);
@@ -584,11 +731,16 @@ small,
 }
 .stat {
   padding: 1rem 1.1rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-2xl);
   background: var(--surface);
+  box-shadow: var(--shadow-soft);
 }
-.stat-value {
+/* Sora on the figure itself — the fintech tell that makes a number read as
+   money rather than as body copy. Same rule serves .num anywhere else. */
+.stat-value,
+.num {
+  font-family: var(--display);
   font-size: 1.6rem;
   font-weight: 700;
   color: var(--text-strong);
@@ -651,10 +803,11 @@ small,
 input,
 select,
 textarea {
-  padding: 0.6rem 0.75rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--bg);
+  min-height: 2.75rem;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-xl);
+  background: hsl(var(--card));
   color: var(--text-strong);
   font: inherit;
   font-size: 0.94rem;
@@ -667,7 +820,7 @@ textarea {
 input:focus,
 select:focus,
 textarea:focus {
-  outline: 2px solid var(--accent);
+  outline: 2px solid hsl(var(--ring));
   outline-offset: 1px;
   border-color: transparent;
 }
@@ -687,7 +840,7 @@ input[type='checkbox'] {
   gap: 0.75rem;
   align-items: flex-end;
   padding: 1rem;
-  border: 1px solid var(--border);
+  border: 1px solid hsl(var(--border));
   border-radius: var(--radius);
   background: var(--surface);
   margin-bottom: 1.25rem;
@@ -711,7 +864,7 @@ input[type='checkbox'] {
 }
 .notice-info {
   background: var(--info-soft);
-  color: var(--info);
+  color: hsl(var(--info));
 }
 .notice-success {
   background: var(--accent-soft);
@@ -719,27 +872,40 @@ input[type='checkbox'] {
 }
 
 /* --- 9. Tabs, lists, tables ---------------------------------------------- */
+/* Segmented control on a sand track, with the active tab lifted onto the card
+   colour — the source's pattern, and easier to hit on a phone than an
+   underline. */
 .tabs {
   display: flex;
   gap: 0.25rem;
-  border-bottom: 1px solid var(--border);
+  padding: 0.25rem;
+  border-radius: var(--radius-xl);
+  background: hsl(var(--secondary));
   margin-bottom: 1.25rem;
   overflow-x: auto;
 }
 .tab {
+  flex: 1;
+  min-height: 2.5rem;
   padding: 0.6rem 0.9rem;
   border: none;
+  border-radius: var(--radius-md);
   background: none;
   font: inherit;
   font-size: 0.92rem;
+  font-weight: 500;
   color: var(--text-mute);
   cursor: pointer;
-  border-bottom: 2px solid transparent;
   white-space: nowrap;
+  transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+.tab:hover:not(.active) {
+  color: var(--text-strong);
 }
 .tab.active {
-  color: var(--accent);
-  border-bottom-color: var(--accent);
+  background: hsl(var(--card));
+  color: var(--text-strong);
+  box-shadow: var(--shadow-soft);
   font-weight: 600;
 }
 
@@ -754,7 +920,7 @@ input[type='checkbox'] {
   gap: 0.9rem;
   align-items: flex-start;
   padding: 1rem 1.1rem;
-  border: 1px solid var(--border);
+  border: 1px solid hsl(var(--border));
   border-radius: var(--radius);
   background: var(--surface);
 }
@@ -764,7 +930,7 @@ input[type='checkbox'] {
 
 .table-wrap {
   overflow-x: auto;
-  border: 1px solid var(--border);
+  border: 1px solid hsl(var(--border));
   border-radius: var(--radius);
 }
 table {
@@ -776,7 +942,7 @@ th,
 td {
   padding: 0.65rem 0.9rem;
   text-align: left;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid hsl(var(--border));
   white-space: nowrap;
 }
 th {
@@ -808,7 +974,7 @@ tbody tr:last-child td {
 .empty {
   padding: 2.5rem 1.5rem;
   text-align: center;
-  border: 1px dashed var(--border);
+  border: 1px dashed hsl(var(--border));
   border-radius: var(--radius);
   color: var(--text-mute);
 }
@@ -845,7 +1011,7 @@ tbody tr:last-child td {
 .spinner {
   width: 1.1rem;
   height: 1.1rem;
-  border: 2px solid var(--border);
+  border: 2px solid hsl(var(--border));
   border-top-color: var(--accent);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
@@ -862,7 +1028,7 @@ tbody tr:last-child td {
   position: fixed;
   inset: 0;
   z-index: 60;
-  background: rgba(13, 17, 23, 0.55);
+  background: rgba(27, 25, 21, 0.55);
   display: grid;
   place-items: center;
   padding: 1.25rem;
@@ -872,7 +1038,7 @@ tbody tr:last-child td {
   max-height: 88vh;
   overflow-y: auto;
   background: var(--bg);
-  border: 1px solid var(--border);
+  border: 1px solid hsl(var(--border));
   border-radius: var(--radius-lg);
   padding: 1.5rem;
   box-shadow: var(--shadow);
@@ -938,7 +1104,7 @@ tbody tr:last-child td {
   padding: 1.1rem;
   border-radius: var(--radius);
   background: var(--bg);
-  border: 1px dashed var(--border);
+  border: 1px dashed hsl(var(--border));
 }
 .qr-code {
   font-family: var(--mono);
