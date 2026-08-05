@@ -14,7 +14,7 @@ import { Field } from '../components/ui'
  * turns into a ServiceProvider profile.
  *
  * Field-level errors come back as {error, details: {field: [msg]}}, and the
- * axios interceptor flattens the top-level message; `details` is read here
+ * fetch wrapper flattens the top-level message; `details` is read here
  * so the message lands under the field that caused it.
  */
 export default function Register() {
