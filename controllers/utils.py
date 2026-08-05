@@ -160,7 +160,12 @@ def paginate(select_stmt, schema, per_page=20, max_per_page=100, **dump_kwargs):
     Every list endpoint answers the same shape, so the client can write one
     generic list hook:
 
-        {"items": [...], "page": 1, "per_page": 20, "total": 57, "pages": 3}
+        {"items": [...], "page": 1, "per_page": 20, "total": 57,
+         "pages": 3, "total_pages": 3}
+
+    `pages` and `total_pages` are the same number under two names: `pages`
+    is what the existing screens read, `total_pages` is the conventional
+    key. Cheaper to send twice than to break every caller renaming it.
     """
     page = request.args.get("page", 1, type=int)
     size = request.args.get("per_page", per_page, type=int)
@@ -177,6 +182,7 @@ def paginate(select_stmt, schema, per_page=20, max_per_page=100, **dump_kwargs):
         "per_page": result.per_page,
         "total": result.total,
         "pages": result.pages,
+        "total_pages": result.pages,
     }
 
 
