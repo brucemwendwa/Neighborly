@@ -31,11 +31,11 @@ api.interceptors.response.use(
     // account — there is nothing a retry can fix, so drop it and start over.
     // The login page is excluded: a wrong password there must show an error,
     // not reload the page underneath the form.
-    if (status === 401 && window.location.pathname !== '/login') {
+    if (status === 401 && window.location.pathname !== '/sign-in') {
       localStorage.removeItem('token')
       localStorage.removeItem('refresh_token')
       localStorage.removeItem('user')
-      window.location.href = '/login'
+      window.location.href = '/sign-in'
     }
 
     // Marshmallow answers a failed validation as
