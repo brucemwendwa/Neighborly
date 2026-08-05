@@ -791,3 +791,17 @@ Still to build:
 - Serve via `gunicorn "main:create_app()"` behind a reverse proxy — the Flask
   development server is single-threaded and not built for production traffic.
 - Restrict `CLIENT_URL` to the real front-end origin.
+
+## Marking guide
+
+`MARKING.md` maps every requirement in the brief to the file and endpoint that
+satisfies it — the three relationships, the association objects and their extra
+attributes, the deep-query endpoints, pagination metadata, and a three-minute
+demo path.
+
+## Quote marketplace
+
+Alongside direct booking, a resident can post a `ServiceRequest`; providers in
+the same estate bid with `JobQuote`s, and accepting one creates the `Booking`.
+`JobStatusEvent` keeps the append-only history. Endpoints live under
+`/api/requests` (see `controllers/job_controller.py`).
