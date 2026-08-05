@@ -51,8 +51,18 @@ def count(stmt):
     That matters: the alternative — loading every booking and calling len()
     in Python — pulls the whole table over the wire to produce one number.
     `order_by(None)` drops any sort, which a COUNT has no use for.
+
+    `maintain_column_froms=True` is load-bearing. Without it,
+    with_only_columns() re-derives the FROM clause from the *new* columns,
+    and `func.count()` names no table — so a query with a WHERE clause still
+    found its table (inferred from the WHERE) while an unfiltered
+    `select(User)` degraded to a bare `SELECT count(*)` with no FROM, which
+    returns one row: every total on the admin dashboard read 1 no matter how
+    much data existed. Keeping the original FROM makes both cases correct.
     """
-    return db.session.scalar(stmt.with_only_columns(func.count()).order_by(None)) or 0
+    return db.session.scalar(
+        stmt.with_only_columns(func.count(), maintain_column_froms=True).order_by(None)
+    ) or 0
 
 
 @dashboard_bp.get("")
