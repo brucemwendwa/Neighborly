@@ -31,6 +31,14 @@ export const COMMUTE_SUBNAV = [
   { label: 'Upcoming', href: '/commute/upcoming', icon: 'CalendarClock' },
 ]
 
+// ── Provider: the working side of the marketplace ───────────────────────────
+export const PROVIDER_NAV = [
+  { label: 'Jobs', href: '/provider/jobs', icon: 'Briefcase' },
+  { label: 'Requests', href: '/provider/requests', icon: 'ClipboardList' },
+  { label: 'Earnings', href: '/wallet', icon: 'Wallet' },
+  { label: 'Profile', href: '/provider/profile', icon: 'User' },
+]
+
 // ── Security: what a guard on the gate needs, and nothing else ──────────────
 export const SECURITY_NAV = [
   { label: 'Scan', href: '/security/scan', icon: 'ScanLine' },
@@ -56,7 +64,7 @@ export const PLATFORM_NAV = [
  */
 export const ROLE_HOME = {
   resident: '/home',
-  provider: '/home',
+  provider: '/provider/requests',
   security: '/security/scan',
   admin: '/admin/overview',
 }
