@@ -42,8 +42,17 @@
   -webkit-font-smoothing: antialiased;
 }
 
+/* The dark palette applies in two situations, and the rules are identical
+   in both, so the same block is written twice under different selectors:
+
+     1. the OS asks for dark and the reader has not overridden it
+     2. the reader picked dark from the header toggle
+
+   `data-theme` is set on <html> by ThemeContext (and, on a reload, by the
+   inline script in index.html so the choice lands before first paint).
+   The :not() is what lets an explicit "light" beat a dark OS setting. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
     --bg: #12151a;
     --surface: #1a1f26;
     --surface-2: #232932;
@@ -62,6 +71,35 @@
     --info-soft: rgba(106, 169, 233, 0.14);
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.3);
   }
+}
+
+:root[data-theme='dark'] {
+  --bg: #12151a;
+  --surface: #1a1f26;
+  --surface-2: #232932;
+  --text: #9aa4b2;
+  --text-strong: #f0f3f6;
+  --text-mute: #78828f;
+  --border: #2a3038;
+  --accent: #3fbf87;
+  --accent-hover: #52d199;
+  --accent-soft: rgba(63, 191, 135, 0.14);
+  --danger: #ef6b5e;
+  --danger-soft: rgba(239, 107, 94, 0.14);
+  --warn: #e0b357;
+  --warn-soft: rgba(224, 179, 87, 0.14);
+  --info: #6aa9e9;
+  --info-soft: rgba(106, 169, 233, 0.14);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+/* Pin the *native* widgets too — scrollbars, select dropdowns, date pickers.
+   Without this an explicit light theme still gets dark scrollbars on a dark OS. */
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+:root[data-theme='dark'] {
+  color-scheme: dark;
 }
 
 * {
@@ -201,6 +239,28 @@ small,
   display: flex;
   align-items: center;
   gap: 0.6rem;
+}
+
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  padding: 0;
+  flex: none;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text);
+  font-size: 0.95rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.theme-toggle:hover {
+  background: var(--surface);
+  border-color: var(--accent);
 }
 
 .app-main {
