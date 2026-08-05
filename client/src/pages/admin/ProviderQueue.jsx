@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { providers } from '../../api'
 import { useApi, useAction } from '../../hooks/useApi'
 import { useToast } from '../../context/ToastContext'
-import { Empty, Field, Results } from '../../components/ui'
+import { Empty, Field, PageHeader, Results } from '../../components/ui'
 import { ProviderCard } from '../../components/cards'
 
 /**
@@ -32,6 +32,10 @@ export default function ProviderQueue() {
 
   return (
     <>
+      <PageHeader
+        title="Providers"
+        description="Approve or reject the professionals applying to work in an estate."
+      />
       <div className="filters">
         <Field
           label="Show"
