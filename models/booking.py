@@ -34,6 +34,14 @@ class Booking(TimestampMixin, db.Model):
         db.String(36), db.ForeignKey("estates.estate_id"), nullable=False
     )
 
+    # Set when the booking came out of the quote marketplace — a resident
+    # posted a ServiceRequest, providers bid, and accepting one landed here.
+    # Null for a direct booking, which is still the shorter path when the
+    # resident already knows who they want.
+    request_id = db.Column(
+        db.String(36), db.ForeignKey("service_requests.request_id"), unique=True
+    )
+
     booking_type = db.Column(
         db.Enum(*BOOKING_TYPES, name="booking_type"), nullable=False, default="instant"
     )
@@ -54,9 +62,17 @@ class Booking(TimestampMixin, db.Model):
     service = db.relationship("Service", back_populates="bookings")
     estate = db.relationship("Estate", back_populates="bookings")
 
+    request = db.relationship("ServiceRequest", back_populates="booking")
+
     payments = db.relationship("Payment", back_populates="booking")
     gate_passes = db.relationship("GatePass", back_populates="booking")
     reviews = db.relationship("Review", back_populates="booking")
+    events = db.relationship(
+        "JobStatusEvent",
+        back_populates="booking",
+        cascade="all, delete-orphan",
+        order_by="JobStatusEvent.created_at",
+    )
 
     def __repr__(self):
         return f"<Booking {self.booking_id} {self.status}>"
