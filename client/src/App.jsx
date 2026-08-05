@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
+import { ThemeProvider } from './context/ThemeContext'
 import { ToastProvider } from './context/ToastContext'
 import Layout from './components/Layout'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -36,110 +37,112 @@ import NotFound from './pages/NotFound'
  */
 export default function App() {
   return (
-    <AuthProvider>
-      <ToastProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Layout />}>
-              <Route index element={<Home />} />
+    <ThemeProvider>
+      <AuthProvider>
+        <ToastProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Layout />}>
+                <Route index element={<Home />} />
 
-              {/* Public */}
-              <Route path="login" element={<Login />} />
-              <Route path="register" element={<Register />} />
-              <Route path="services" element={<Services />} />
-              <Route path="services/:serviceId" element={<ServiceDetail />} />
-              <Route path="listings" element={<Listings />} />
-              <Route path="listings/:listingId" element={<ListingDetail />} />
+                {/* Public */}
+                <Route path="login" element={<Login />} />
+                <Route path="register" element={<Register />} />
+                <Route path="services" element={<Services />} />
+                <Route path="services/:serviceId" element={<ServiceDetail />} />
+                <Route path="listings" element={<Listings />} />
+                <Route path="listings/:listingId" element={<ListingDetail />} />
 
-              {/* Signed in */}
-              <Route
-                path="bookings"
-                element={
-                  <ProtectedRoute>
-                    <Bookings />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="bookings/:bookingId"
-                element={
-                  <ProtectedRoute>
-                    <BookingDetail />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="moves"
-                element={
-                  <ProtectedRoute>
-                    <Moves />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="rides"
-                element={
-                  <ProtectedRoute>
-                    <Rides />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="gate-passes"
-                element={
-                  <ProtectedRoute>
-                    <GatePasses />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="wallet"
-                element={
-                  <ProtectedRoute>
-                    <Wallet />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="notifications"
-                element={
-                  <ProtectedRoute>
-                    <Notifications />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="profile"
-                element={
-                  <ProtectedRoute>
-                    <Profile />
-                  </ProtectedRoute>
-                }
-              />
+                {/* Signed in */}
+                <Route
+                  path="bookings"
+                  element={
+                    <ProtectedRoute>
+                      <Bookings />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="bookings/:bookingId"
+                  element={
+                    <ProtectedRoute>
+                      <BookingDetail />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="moves"
+                  element={
+                    <ProtectedRoute>
+                      <Moves />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="rides"
+                  element={
+                    <ProtectedRoute>
+                      <Rides />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="gate-passes"
+                  element={
+                    <ProtectedRoute>
+                      <GatePasses />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="wallet"
+                  element={
+                    <ProtectedRoute>
+                      <Wallet />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="notifications"
+                  element={
+                    <ProtectedRoute>
+                      <Notifications />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="profile"
+                  element={
+                    <ProtectedRoute>
+                      <Profile />
+                    </ProtectedRoute>
+                  }
+                />
 
-              {/* Role-restricted */}
-              <Route
-                path="gate"
-                element={
-                  <ProtectedRoute roles={['security', 'admin']}>
-                    <GateDesk />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="admin"
-                element={
-                  <ProtectedRoute roles={['admin']}>
-                    <Admin />
-                  </ProtectedRoute>
-                }
-              />
+                {/* Role-restricted */}
+                <Route
+                  path="gate"
+                  element={
+                    <ProtectedRoute roles={['security', 'admin']}>
+                      <GateDesk />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="admin"
+                  element={
+                    <ProtectedRoute roles={['admin']}>
+                      <Admin />
+                    </ProtectedRoute>
+                  }
+                />
 
-              <Route path="*" element={<NotFound />} />
-            </Route>
-          </Routes>
-        </BrowserRouter>
-      </ToastProvider>
-    </AuthProvider>
+                <Route path="*" element={<NotFound />} />
+              </Route>
+            </Routes>
+          </BrowserRouter>
+        </ToastProvider>
+      </AuthProvider>
+    </ThemeProvider>
   )
 }
