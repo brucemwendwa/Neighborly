@@ -25,6 +25,7 @@ from controllers.utils import (
     notify,
     paginate,
     query_arg,
+    record_event,
     save,
 )
 
@@ -51,6 +52,17 @@ WHO_MAY_SET = {
     "in_progress": ("provider", "admin"),
     "completed": ("provider", "admin"),
     "cancelled": ("customer", "provider", "admin"),
+}
+
+# Statuses and events are deliberately different vocabularies. A status says
+# where the work *is* and is overwritten on every move; an event says what
+# *happened* and is kept forever. 'in_progress' is a state, 'started' is the
+# thing that caused it.
+STATUS_EVENTS = {
+    "accepted": "accepted",
+    "in_progress": "started",
+    "completed": "completed",
+    "cancelled": "cancelled",
 }
 
 
@@ -215,6 +227,10 @@ def accept_booking(booking_id):
 
     booking.provider_id = profile.provider_id
     booking.status = "accepted"
+    # Claiming a job is a status change like any other, so it belongs in the
+    # trail too — otherwise a directly-booked job's history starts at
+    # "started", with no record of who picked it up or when.
+    log_transition(booking, "accepted")
 
     notify(
         booking.user_id,
@@ -276,8 +292,36 @@ def change_status(booking, role, new_status):
         ), 403
 
     booking.status = new_status
+    log_transition(booking, new_status)
     announce_status(booking, role, new_status)
     return None
+
+
+def log_transition(booking, new_status):
+    """Write the move to the job trail, and close the request behind it.
+
+    Two things were falling through the gap between this file and
+    job_controller.py. A booking made from an accepted quote leaves its
+    ServiceRequest alive alongside it, and nothing moved that request off
+    'assigned' — so a finished job sat on the resident's board forever, and
+    the 'completed' status declared in REQUEST_STATUSES was never once
+    reached. The trail had the same break: events stopped at the moment the
+    quote was accepted, because only job_controller wrote them.
+
+    Both halves now write to the same history, so the resident reads one
+    timeline from "posted" through to "completed" rather than one that ends
+    where the work actually begins.
+    """
+    record_event(
+        STATUS_EVENTS[new_status],
+        request=booking.request,
+        booking=booking,
+        note=f"{current_user.full_name} marked it {new_status.replace('_', ' ')}",
+    )
+
+    # A direct booking has no request behind it; only the quoted path does.
+    if booking.request and new_status in ("completed", "cancelled"):
+        booking.request.status = new_status
 
 
 def edit_details(booking, role, data):

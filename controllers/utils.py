@@ -15,7 +15,7 @@ from flask_jwt_extended import current_user, get_jwt_identity, verify_jwt_in_req
 from werkzeug.exceptions import Forbidden, NotFound
 
 from extensions import db, jwt
-from models import Notification, User
+from models import JobStatusEvent, Notification, User
 
 # --- JWT plumbing ---------------------------------------------------------
 #
@@ -217,6 +217,30 @@ def notify(user_id, title, message, type="general"):
     note = Notification(user_id=user_id, title=title, message=message, type=type)
     db.session.add(note)
     return note
+
+
+def record_event(event_type, *, request=None, booking=None, note=None):
+    """Append one line to a job's history.
+
+    Uncommitted for the same reason as notify(): the trail and the transition
+    it describes have to land together, or a job could show a "completed"
+    event it never actually reached.
+
+    This lives here rather than in a controller because both halves of the
+    lifecycle write to it — job_controller for everything up to the accepted
+    quote, booking_controller for the work itself. A booking that came from a
+    request passes both, so the resident reads one continuous timeline
+    instead of two that stop halfway.
+    """
+    event = JobStatusEvent(
+        request_id=request.request_id if request else None,
+        booking_id=booking.booking_id if booking else None,
+        event_type=event_type,
+        actor_id=current_user.user_id,
+        note=note,
+    )
+    db.session.add(event)
+    return event
 
 
 def new_token(prefix):

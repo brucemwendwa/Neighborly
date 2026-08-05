@@ -30,7 +30,6 @@ from extensions import db
 from models import (
     Booking,
     JobQuote,
-    JobStatusEvent,
     Service,
     ServiceCategory,
     ServiceRequest,
@@ -50,6 +49,7 @@ from controllers.utils import (
     notify,
     paginate,
     query_arg,
+    record_event,
     save,
 )
 
@@ -61,23 +61,6 @@ quote_schema = JobQuoteSchema()
 # A request stops taking bids once it is spoken for. Without this a provider
 # could quote on a job that already has someone on the way to it.
 OPEN_TO_QUOTES = ("open", "quoting")
-
-
-def record(event_type, *, request=None, booking=None, note=None):
-    """Append one line to the job's history.
-
-    Every status change goes through here rather than each handler writing
-    its own row, so no transition can be made without leaving a trace.
-    """
-    db.session.add(
-        JobStatusEvent(
-            request_id=request.request_id if request else None,
-            booking_id=booking.booking_id if booking else None,
-            event_type=event_type,
-            actor_id=current_user.user_id,
-            note=note,
-        )
-    )
 
 
 def owner_or_403(service_request):
@@ -189,7 +172,7 @@ def create_request():
     )
     db.session.add(service_request)
     db.session.flush()  # assigns the id the event row needs
-    record("created", request=service_request)
+    record_event("created", request=service_request)
     save(service_request)
 
     return jsonify(request=request_schema.dump(service_request)), 201
@@ -244,7 +227,7 @@ def cancel_request(request_id):
                 type="booking",
             )
 
-    record("cancelled", request=service_request)
+    record_event("cancelled", request=service_request)
     save(service_request)
     return jsonify(request=request_schema.dump(service_request))
 
@@ -305,7 +288,7 @@ def create_quote(request_id):
     if service_request.status == "open":
         service_request.status = "quoting"
 
-    record("quoted", request=service_request, note=f"{profile.user.full_name} quoted")
+    record_event("quoted", request=service_request, note=f"{profile.user.full_name} quoted")
     notify(
         service_request.resident_id,
         "New quote received",
@@ -403,7 +386,7 @@ def accept_quote(request_id, quote_id):
 
     service_request.status = "assigned"
     db.session.flush()  # booking id, for the event row below
-    record(
+    record_event(
         "accepted",
         request=service_request,
         booking=booking,
