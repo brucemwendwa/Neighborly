@@ -26,6 +26,7 @@ class Service(CreatedAtMixin, db.Model):
 
     category = db.relationship("ServiceCategory", back_populates="services")
     bookings = db.relationship("Booking", back_populates="service")
+    service_requests = db.relationship("ServiceRequest", back_populates="service")
 
     def __repr__(self):
         return f"<Service {self.name}>"
